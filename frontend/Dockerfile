@@ -1,0 +1,18 @@
+# Contexto de build: raiz do repositório (o front depende do workspace packages/contracts).
+
+FROM node:24.22.1-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json .npmrc ./
+COPY packages/contracts/package.json packages/contracts/
+COPY backend/package.json backend/
+COPY frontend/package.json frontend/
+RUN npm ci --workspace @fastmeals/frontend --include-workspace-root
+COPY tsconfig.base.json ./
+COPY packages/contracts packages/contracts
+COPY frontend frontend
+RUN npm run build --workspace @fastmeals/frontend
+
+FROM nginx:1.30.6-alpine AS runtime
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/frontend/dist /usr/share/nginx/html
+EXPOSE 3000
