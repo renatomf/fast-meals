@@ -17,8 +17,11 @@ jobs:
     name: Lint, types, tests and build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      # Actions fixadas por SHA: uma tag pode ser movida, um commit não.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -29,19 +32,48 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - run: npm audit --audit-level=high
+
+  security:
+    name: Dependency security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # Qualquer severidade reprova, não só high/critical.
+      - run: npm audit --audit-level=low
+      # Confere assinatura do registry e attestations de proveniência dos pacotes instalados.
+      - run: npm audit signatures
 
   docker:
     name: Docker Compose smoke test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       # O mesmo comando que o avaliador vai rodar.
       - run: docker compose up --build --detach --wait
       - name: Front and API answer through nginx
         run: |
           curl --fail --silent http://localhost:3000/ | grep -q "<title>FastMeals</title>"
           curl --fail --silent http://localhost:3000/api/health | grep -q '"database":"up"'
+      # Qualquer CVE com correção publicada reprova o build, em qualquer severidade.
+      # Trivy roda pela imagem oficial fixada por digest, sem action de terceiros.
+      - name: Scan images for vulnerabilities and secrets
+        env:
+          TRIVY: aquasec/trivy:0.76.1@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c
+        run: |
+          for image in fastmeals-backend fastmeals-frontend fastmeals-db; do
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY" image \
+              --scanners vuln,secret --ignore-unfixed --exit-code 1 \
+              --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL "$image"
+          done
       - if: failure()
         run: docker compose logs
       - if: always()
