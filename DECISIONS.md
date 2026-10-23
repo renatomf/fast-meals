@@ -42,6 +42,46 @@ Levei os itens 1 e 2 à equipe. Enquanto não houver resposta, sigo as premissas
 | 3   | A tela de pedidos pede filtro por data, mas `GET /api/orders` só filtra por status                                            | A listagem aceita também `startDate` e `endDate`                                                                                        |
 | 4   | `seed/data.json` não traz datas                                                                                               | O seed gera datas nos últimos 30 dias com semente fixa, para que os relatórios tenham conteúdo e os números se repitam em toda execução |
 
+## Segurança da cadeia de suprimentos
+
+A regra que segui: nenhuma vulnerabilidade com correção disponível chega à entrega, e o CI reprova se isso mudar. Cada camada tem a sua verificação.
+
+| Camada                 | O que fiz                                                                                                                                                                                                    | Como é verificado                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| Runtime                | Node 24.22.1, a primeira versão com a release de segurança de 21/10/2026                                                                                                                                     | `.nvmrc` + `engines` + `engine-strict`                                    |
+| Gerenciador de pacotes | npm 11.21.1, última da linha 11 (os advisories mais recentes do CLI afetam até a 11.8.0)                                                                                                                     | —                                                                         |
+| Dependências           | Versões exatas (`save-exact`) e lockfile versionado                                                                                                                                                          | `npm audit --audit-level=low` no CI, ou seja, qualquer severidade reprova |
+| Instalação             | `ignore-scripts=true` no `.npmrc`. Scripts `postinstall` são o vetor dos worms de cadeia de suprimentos. Só um pacote do projeto tinha script (`unrs-resolver`, ferramenta de lint), e tudo funciona sem ele | Reinstalação limpa + lint, testes e build                                 |
+| Proveniência           | Assinaturas do registry e attestations conferidas                                                                                                                                                            | `npm audit signatures` no CI                                              |
+| CI                     | Actions fixadas por SHA de commit (uma tag pode ser movida); `persist-credentials: false`; permissão só de leitura                                                                                           | —                                                                         |
+| Imagens Docker         | Endurecimento descrito abaixo                                                                                                                                                                                | Trivy (fixado por digest) no CI, reprovando qualquer CVE corrigível       |
+| Atualizações           | Dependabot semanal para npm, GitHub Actions e imagens base                                                                                                                                                   | —                                                                         |
+
+### Imagens Docker
+
+O `npm audit` limpo não dizia nada sobre as imagens. Ao escaneá-las com o Docker Scout, nenhuma estava limpa, e nenhum problema vinha das dependências do projeto:
+
+| Imagem     | Antes         | Depois      | O que mudou                                                                                                                                                                  |
+| ---------- | ------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend    | 0C 4H 8M 1L   | 0C 0H 0M 0L | O runtime só executa `node`. Removi npm, npx, corepack e yarn, que vêm na imagem base com dependências próprias vulneráveis (`undici`, `brace-expansion`...)                 |
+| Frontend   | 1C 2H 5M 5L   | 0C 0H 0M 0L | `apk upgrade` (corrige o `brotli`, que era a crítica) e remoção de `curl` e dos módulos `xslt`/`njs` do nginx, que puxavam `libxml2` e não são carregados                    |
+| PostgreSQL | 5C 32H 29M 7L | 0C 1H 5M 5L | Imagem própria em [`docker/postgres`](docker/postgres/Dockerfile): sem `gosu`, sem `curl`, sem `libcurl`, rodando como usuário `postgres`, porta publicada só em `127.0.0.1` |
+
+Detalhes que aprendi no caminho:
+
+- **Apagar um arquivo numa camada nova não o remove da imagem.** Depois de deletar o `gosu`, o scanner continuava acusando-o, e com razão: o binário seguia dentro da camada da imagem base, só escondido. A imagem do Postgres agora copia o sistema de arquivos final para uma imagem vazia (`FROM scratch`), o que elimina o binário de fato.
+- **O `libcurl` era usado só pelo `libpq-oauth`**, o módulo de OAuth do lado cliente que chegou no PostgreSQL 18. A API conecta com senha, então removi os dois. Em vez de apagar arquivos e deixar o banco de pacotes do Alpine inconsistente, o Dockerfile recria o pacote virtual de dependências do Postgres sem o `libcurl` e falha o build se ele continuar instalado.
+- A variante Debian da imagem oficial era pior que a Alpine (4C 33H 30M 55L), por isso mantive Alpine.
+
+### Riscos aceitos
+
+Dois itens continuam aparecendo no Docker Scout. Nenhum tem correção publicada para o Alpine 3.24, e o Trivy, que usa a base de segurança oficial do Alpine, não acusa nenhuma vulnerabilidade nas três imagens.
+
+| Pacote                                                                  | Situação                                                                     | Por que aceitei                                                                           | Mitigação                                                                                                                                                       |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `libxml2` 2.13.9-r2 no PostgreSQL (1H 5M 5L)                            | Sem correção publicada                                                       | É ligado ao binário do Postgres; removê-lo exigiria compilar o Postgres sem suporte a XML | O banco não é exposto à rede (só `127.0.0.1` e a rede interna do Compose) e a aplicação não usa funções XML. Explorar exigiria já poder executar SQL arbitrário |
+| `musl` 1.2.6-r3 em todas as imagens (severidade ainda não classificada) | A correção (r6) existe, mas não chegou ao repositório estável do Alpine 3.24 | Não há versão estável para instalar                                                       | O `apk upgrade` roda em todo build e pega a correção assim que ela for publicada; o scan do CI passa a reprovar se ela ficar disponível e não for aplicada      |
+
 ## Dificuldades encontradas
 
 **O lint de arquitetura não verificava pacotes npm.** Escrevi a regra "algoritmos não importam `fastify`" e ela passava em silêncio. Criei arquivos com violações de propósito e confirmei que só as dependências locais eram checadas. A causa estava no código do plugin: pacotes externos só são avaliados com a opção `checkAllOrigins: true`, que o README não menciona. Desde então, toda regra nova de fronteira é testada com uma violação proposital antes de ser considerada pronta.
