@@ -13,6 +13,10 @@ COPY frontend frontend
 RUN npm run build --workspace @fastmeals/frontend
 
 FROM nginx:1.30.6-alpine AS runtime
+# Só servimos arquivos estáticos e fazemos proxy: curl e os módulos xslt/njs (que puxam
+# libxml2) não são carregados e só aumentam a superfície de ataque.
+RUN apk upgrade --no-cache \
+  && apk del --no-cache curl nginx-module-xslt nginx-module-njs libxslt libxml2
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/frontend/dist /usr/share/nginx/html
 EXPOSE 3000
