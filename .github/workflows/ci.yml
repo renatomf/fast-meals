@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, types, tests and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run check:no-js
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm audit --audit-level=high
+
+  docker:
+    name: Docker Compose smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # O mesmo comando que o avaliador vai rodar.
+      - run: docker compose up --build --detach --wait
+      - name: Front and API answer through nginx
+        run: |
+          curl --fail --silent http://localhost:3000/ | grep -q "<title>FastMeals</title>"
+          curl --fail --silent http://localhost:3000/api/health | grep -q '"database":"up"'
+      - if: failure()
+        run: docker compose logs
+      - if: always()
+        run: docker compose down --volumes
