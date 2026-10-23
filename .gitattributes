@@ -1,0 +1,5 @@
+# Força LF no repositório: scripts e arquivos copiados para containers Linux quebram com CRLF.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.gif binary
