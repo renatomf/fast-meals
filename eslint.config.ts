@@ -1,5 +1,6 @@
 import js from "@eslint/js";
 import boundaries from "eslint-plugin-boundaries";
+import reactHooks from "eslint-plugin-react-hooks";
 import { defineConfig, globalIgnores } from "eslint/config";
 import globals from "globals";
 import tseslint from "typescript-eslint";
@@ -161,6 +162,23 @@ export default defineConfig(
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/consistent-type-imports": ["error", { fixStyle: "inline-type-imports" }],
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+    },
+  },
+  {
+    files: ["frontend/src/**/*.{ts,tsx}"],
+    extends: [reactHooks.configs.flat.recommended],
+    languageOptions: {
+      globals: { ...globals.browser },
+    },
+    rules: {
+      // Cores soltas fogem dos tokens; toda cor vem de design-system/tokens.
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Literal[value=/\\[#[0-9a-fA-F]{3,8}\\]/]",
+          message: "Use um token de cor do design system em vez de uma cor arbitrária.",
+        },
+      ],
     },
   },
   architecture,
