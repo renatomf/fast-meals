@@ -21,7 +21,14 @@ docker-compose up --build
 | Health check                  | http://localhost:3001/api/health                                                  |
 | PostgreSQL                    | `localhost:5433` (só na máquina local; usuário `fastmeals`, senha `fastmeals123`) |
 
-O banco fica na porta 5433 do host para não colidir com um PostgreSQL local na 5432.
+O banco fica na porta 5433 do host para não colidir com um PostgreSQL local na 5432. O backend aplica as migrations e popula o banco ao subir; reiniciar os containers não apaga dados.
+
+### Credenciais
+
+| Perfil              | Email                  | Senha        |
+| ------------------- | ---------------------- | ------------ |
+| Admin (tudo)        | `admin@fastmeals.com`  | `Admin@123`  |
+| Viewer (só leitura) | `viewer@fastmeals.com` | `Viewer@123` |
 
 ## Rodando sem Docker
 
@@ -29,10 +36,12 @@ Requer Node.js 24.22.1 ou superior na linha 24 (veja `.nvmrc`) e um PostgreSQL a
 
 ```bash
 cp .env.example .env   # ajuste DATABASE_URL para o seu PostgreSQL
+                       # (ou use o do Docker: docker compose up -d db, porta 5433)
 
 # Terminal 1
 cd backend
 npm install
+npm run seed           # migrations + dados de seed/data.json
 npm run dev            # http://localhost:3001
 
 # Terminal 2
@@ -59,7 +68,7 @@ seed/data.json       Dados oficiais do desafio
 ```bash
 npm run lint         # inclui as regras de fronteira entre camadas
 npm run typecheck
-npm test
+npm test             # o backend precisa do PostgreSQL: docker compose up -d db
 npm run build
 ```
 
