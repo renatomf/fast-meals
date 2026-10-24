@@ -1,0 +1,11 @@
+{
+  "files": [],
+  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
+  // Repetido aqui só para o CLI do shadcn, que lê os aliases deste arquivo.
+  // Sem isso ele trata "@/utils/cn" como nome de pacote npm.
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}

@@ -1,0 +1,9 @@
+dist
+coverage
+package-lock.json
+docs/challenge.md
+docs/api-spec.md
+docs/database-schema.md
+docs/evaluation-criteria.md
+seed/data.json
+backend/drizzle

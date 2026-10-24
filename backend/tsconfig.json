@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    // O backend roda direto no Node 24 (type stripping), sem etapa de build.
+    // Só sintaxe apagável é permitida: nada de enum, namespace ou parameter properties.
+    "erasableSyntaxOnly": true,
+    "types": ["node"]
+  },
+  "include": ["src", "tests"]
+}
