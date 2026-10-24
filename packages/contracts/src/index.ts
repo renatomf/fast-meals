@@ -4,5 +4,6 @@ export * from "./delivery-persons.ts";
 export * from "./domain.ts";
 export * from "./errors.ts";
 export * from "./health.ts";
+export * from "./orders.ts";
 export * from "./pagination.ts";
 export * from "./products.ts";
