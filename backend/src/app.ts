@@ -33,6 +33,9 @@ import { ordersRoutes } from "./modules/orders/orders.routes.ts";
 import { createOrdersService } from "./modules/orders/orders.service.ts";
 import { productsRepository } from "./modules/products/products.repository.ts";
 import { productsRoutes } from "./modules/products/products.routes.ts";
+import { reportsRepository } from "./modules/reports/reports.repository.ts";
+import { reportsRoutes } from "./modules/reports/reports.routes.ts";
+import { createReportsService } from "./modules/reports/reports.service.ts";
 import { createProductsService } from "./modules/products/products.service.ts";
 import { AppError } from "./utils/app-error.ts";
 
@@ -138,6 +141,7 @@ export async function buildApp({ env, db, checkDatabase, logStream }: AppDepende
   });
   const ordersService = createOrdersService({ db, repository: ordersRepository });
   const dispatchService = createDispatchService({ db, repository: dispatchRepository });
+  const reportsService = createReportsService({ db, repository: reportsRepository });
 
   await app.register(healthRoutes, { prefix: "/api", checkDatabase });
   await app.register(authRoutes, { prefix: "/api/auth", authService, authenticate });
@@ -150,6 +154,7 @@ export async function buildApp({ env, db, checkDatabase, logStream }: AppDepende
       await api.register(productsRoutes, { productsService });
       await api.register(ordersRoutes, { ordersService });
       await api.register(dispatchRoutes, { dispatchService });
+      await api.register(reportsRoutes, { reportsService });
       if (env.DEMO_MODE) {
         const demoService = createDemoService({
           ordersService,
