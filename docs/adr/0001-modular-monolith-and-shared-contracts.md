@@ -32,6 +32,12 @@ Duas coisas me preocupavam desde o início:
 - **Backend sem etapa de build.** O Node 24 executa TypeScript nativamente (type stripping), então em produção rodo `node src/server.ts`. O `tsc` serve apenas para checagem de tipos. Isso exige sintaxe apagável (`erasableSyntaxOnly`): nada de `enum`, `namespace` ou parameter properties.
 - **Fronteiras verificadas no lint** com `eslint-plugin-boundaries`. Exemplos: um algoritmo não pode importar `fastify`; uma rota não pode importar o banco; uma feature do front só importa outra pelo `index.ts` dela. Uma violação quebra o CI.
 
+### Leitura entre módulos
+
+Um módulo só chama outro pelo `*.service.ts` dele, mas um **repositório pode ler tabelas de outros módulos**. Escrever, só nas do próprio. Abri essa exceção quando implementei pedidos: criar um pedido precisa ler os produtos com `FOR SHARE` dentro da mesma transação que grava o pedido, e atribuir um entregador precisa travá-lo do mesmo jeito ([ADR 0003](0003-database-integrity-and-concurrency.md)). Passar por `productsService` exigiria repassar a transação entre módulos e expor travas na interface pública de outro domínio. Ler a tabela direto deixa a trava junto da consulta que depende dela.
+
+A regra de escrita não é verificada pelo lint; é convenção, e cada caso de leitura cruzada tem um comentário dizendo por que existe.
+
 ## Alternativas consideradas
 
 | Alternativa                                    | Por que não                                                                                                                                                                     |
@@ -47,5 +53,6 @@ Duas coisas me preocupavam desde o início:
 - Uma mudança de contrato quebra a compilação do front e do back ao mesmo tempo, o que é o efeito desejado.
 - O Dockerfile precisa da raiz do repositório como contexto, porque o backend e o front dependem do workspace `contracts`.
 - A restrição de sintaxe apagável no backend me impede de usar `enum`. Uso uniões de strings literais, que também são o que o Zod produz.
-- As regras de fronteira precisam ser testadas: na primeira versão, o plugin ignorava pacotes npm sem avisar (ver "Dificuldades" no `DECISIONS.md`).
+- As regras de fronteira precisam ser testadas: o plugin já ignorou em silêncio pacotes npm (dia 1) e imports dentro do mesmo módulo (dia 3), os dois por opções desligadas por padrão. Ver "Dificuldades" no `DECISIONS.md`.
+- Os services recebem o repositório pela factory, então podem ser testados com um falso, sem banco ([`orders.service.test.ts`](../../backend/tests/orders.service.test.ts)). Eles conhecem o tipo do cliente Drizzle e abrem as próprias transações: escolhi não esconder isso atrás de uma interface `UnitOfWork`, porque as travas e as escritas condicionais fazem parte da regra, não são detalhe de infraestrutura.
 - Se o sistema crescer a ponto de precisar de outro serviço, os módulos já têm fronteiras explícitas. Extrair um deles seria mover uma pasta e trocar chamadas de função por chamadas de rede, não reescrever.

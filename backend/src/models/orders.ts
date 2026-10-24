@@ -51,10 +51,14 @@ export const orders = pgTable(
   ],
 );
 
+// uuidv7 (PostgreSQL 18) cresce com o tempo e é monotônico na mesma sessão: ordenar por id
+// devolve os itens na ordem em que o pedido os listou, mesmo com o mesmo created_at.
 export const orderItems = pgTable(
   "order_items",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`uuidv7()`),
     orderId: uuid("order_id")
       .notNull()
       .references(() => orders.id, { onDelete: "cascade" }),
@@ -79,7 +83,9 @@ export const orderItems = pgTable(
 export const orderStatusHistory = pgTable(
   "order_status_history",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: uuid("id")
+      .primaryKey()
+      .default(sql`uuidv7()`),
     orderId: uuid("order_id")
       .notNull()
       .references(() => orders.id, { onDelete: "cascade" }),

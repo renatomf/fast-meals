@@ -69,16 +69,28 @@ Para outro servidor, aponte `TEST_DATABASE_URL` para ele.
 
 ## Endpoints disponíveis
 
-| Rota                     | Descrição                                                                      |
-| ------------------------ | ------------------------------------------------------------------------------ |
-| `POST /api/auth/login`   | Email e senha → access token, refresh token e usuário                          |
-| `POST /api/auth/refresh` | Refresh token (corpo ou cookie) → novo par de tokens; o token usado é revogado |
-| `POST /api/auth/logout`  | Revoga a sessão e limpa o cookie                                               |
-| `GET /api/auth/me`       | Usuário dono do access token                                                   |
-| `GET /api/health`        | Status da API e do banco (200 ou 503)                                          |
-| `GET /api/docs`          | Swagger UI, gerado a partir dos schemas Zod                                    |
+| Rota                                             | Descrição                                                                      |
+| ------------------------------------------------ | ------------------------------------------------------------------------------ |
+| `POST /api/auth/login`                           | Email e senha → access token, refresh token e usuário                          |
+| `POST /api/auth/refresh`                         | Refresh token (corpo ou cookie) → novo par de tokens; o token usado é revogado |
+| `POST /api/auth/logout`                          | Revoga a sessão e limpa o cookie                                               |
+| `GET /api/auth/me`                               | Usuário dono do access token                                                   |
+| `GET /api/products`                              | Lista com paginação, busca por nome, filtros e ordenação                       |
+| `GET`, `PUT`, `DELETE /api/products/:id`         | Detalhe, edição parcial e exclusão (409 se estiver em pedido aberto)           |
+| `POST /api/products`                             | Cria produto                                                                   |
+| `GET /api/orders`                                | Lista com paginação, filtros de status e período e ordenação                   |
+| `GET /api/orders/:id`, `/:id/history`            | Detalhe e linha do tempo de status                                             |
+| `POST /api/orders`                               | Cria pedido; total calculado no servidor                                       |
+| `PATCH /api/orders/:id/status`                   | Muda o status pelas 7 transições permitidas                                    |
+| `PATCH /api/orders/:id/assign`                   | Atribui entregador a um pedido `ready`                                         |
+| `GET`, `POST /api/delivery-persons`              | Lista (filtros `isActive` e `available`) e cadastro                            |
+| `GET`, `PUT`, `DELETE /api/delivery-persons/:id` | Detalhe, edição parcial e remoção (409 se estiver em pedido em andamento)      |
+| `GET /api/health`                                | Status da API e do banco (200 ou 503)                                          |
+| `GET /api/docs`                                  | Swagger UI, gerado a partir dos schemas Zod                                    |
 
 Dez senhas erradas para o mesmo email em 15 minutos bloqueiam aquele email até o fim da janela, mesmo vindo de IPs diferentes ([ADR 0004](../docs/adr/0004-token-storage-and-rotation.md)). Reiniciar a API zera o contador.
+
+Todas as rotas fora de `/api/auth`, `/api/health` e `/api/docs` exigem o header `Authorization: Bearer <accessToken>`. O viewer lê tudo; criar, editar, excluir, mudar status e atribuir exigem o perfil admin.
 
 Credenciais do seed: `admin@fastmeals.com` / `Admin@123` e `viewer@fastmeals.com` / `Viewer@123`.
 
