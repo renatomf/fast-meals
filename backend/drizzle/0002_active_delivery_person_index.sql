@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "uq_orders_active_delivery_person" ON "orders" USING btree ("delivery_person_id") WHERE "orders"."status" in ('ready', 'delivering') and "orders"."delivery_person_id" is not null;

@@ -7,6 +7,7 @@ import {
   numeric,
   pgTable,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -41,6 +42,12 @@ export const orders = pgTable(
     index("idx_orders_created_at").on(t.createdAt.desc()),
     index("idx_orders_delivery_person_id").on(t.deliveryPersonId),
     index("idx_orders_status_created").on(t.status, t.createdAt),
+    // Um entregador tem no máximo um pedido ativo. Garantido pelo banco, não pelo código:
+    // duas atribuições simultâneas não passam juntas por nenhuma verificação prévia.
+    // "ready" entra junto com "delivering" (premissa 10 do DECISIONS.md).
+    uniqueIndex("uq_orders_active_delivery_person")
+      .on(t.deliveryPersonId)
+      .where(sql`${t.status} in ('ready', 'delivering') and ${t.deliveryPersonId} is not null`),
   ],
 );
 

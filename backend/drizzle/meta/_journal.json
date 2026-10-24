@@ -15,6 +15,20 @@
       "when": 1792808401607,
       "tag": "0001_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792808495003,
+      "tag": "0002_active_delivery_person_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792808510745,
+      "tag": "0003_updated_at_trigger",
+      "breakpoints": true
     }
   ]
 }
