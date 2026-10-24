@@ -22,12 +22,20 @@ import { createLoginThrottle } from "./modules/auth/login-throttle.ts";
 import { deliveryPersonsRepository } from "./modules/delivery-persons/delivery-persons.repository.ts";
 import { deliveryPersonsRoutes } from "./modules/delivery-persons/delivery-persons.routes.ts";
 import { createDeliveryPersonsService } from "./modules/delivery-persons/delivery-persons.service.ts";
+import { demoRoutes } from "./modules/demo/demo.routes.ts";
+import { createDemoService } from "./modules/demo/demo.service.ts";
+import { dispatchRepository } from "./modules/dispatch/dispatch.repository.ts";
+import { dispatchRoutes } from "./modules/dispatch/dispatch.routes.ts";
+import { createDispatchService } from "./modules/dispatch/dispatch.service.ts";
 import { healthRoutes } from "./modules/health/health.routes.ts";
 import { ordersRepository } from "./modules/orders/orders.repository.ts";
 import { ordersRoutes } from "./modules/orders/orders.routes.ts";
 import { createOrdersService } from "./modules/orders/orders.service.ts";
 import { productsRepository } from "./modules/products/products.repository.ts";
 import { productsRoutes } from "./modules/products/products.routes.ts";
+import { reportsRepository } from "./modules/reports/reports.repository.ts";
+import { reportsRoutes } from "./modules/reports/reports.routes.ts";
+import { createReportsService } from "./modules/reports/reports.service.ts";
 import { createProductsService } from "./modules/products/products.service.ts";
 import { AppError } from "./utils/app-error.ts";
 
@@ -132,6 +140,8 @@ export async function buildApp({ env, db, checkDatabase, logStream }: AppDepende
     repository: deliveryPersonsRepository,
   });
   const ordersService = createOrdersService({ db, repository: ordersRepository });
+  const dispatchService = createDispatchService({ db, repository: dispatchRepository });
+  const reportsService = createReportsService({ db, repository: reportsRepository });
 
   await app.register(healthRoutes, { prefix: "/api", checkDatabase });
   await app.register(authRoutes, { prefix: "/api/auth", authService, authenticate });
@@ -143,6 +153,16 @@ export async function buildApp({ env, db, checkDatabase, logStream }: AppDepende
       api.addHook("onRequest", authenticate);
       await api.register(productsRoutes, { productsService });
       await api.register(ordersRoutes, { ordersService });
+      await api.register(dispatchRoutes, { dispatchService });
+      await api.register(reportsRoutes, { reportsService });
+      if (env.DEMO_MODE) {
+        const demoService = createDemoService({
+          ordersService,
+          deliveryPersonsService,
+          productsService,
+        });
+        await api.register(demoRoutes, { demoService });
+      }
       await api.register(deliveryPersonsRoutes, { deliveryPersonsService });
     },
     { prefix: "/api" },

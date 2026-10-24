@@ -36,7 +36,7 @@ async function list(db: Executor, query: ListProductsQuery) {
       .from(products)
       .where(where)
       // id desempata: sem ele, a mesma linha pode aparecer em duas páginas.
-      .orderBy(direction(sortColumns[query.sortBy]), asc(products.id))
+      .orderBy(direction(sortColumns[query.sortBy]), direction(products.id))
       .limit(query.limit)
       .offset(pageOffset(query)),
     db.select({ total: count() }).from(products).where(where),

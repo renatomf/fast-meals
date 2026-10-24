@@ -40,6 +40,9 @@ const envSchema = z
     // Quantos proxies confiáveis existem na frente da API (o nginx do front no Docker).
     // Sem isso, atrás de um proxy todo cliente tem o IP dele e divide o mesmo limite.
     TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
+    // Liga POST /api/dispatch/demo-scenario, que cria dados de demonstração. O compose liga
+    // para a avaliação; sem a variável, a rota nem existe.
+    DEMO_MODE: z.stringbool().default(false),
   })
   .superRefine((env, ctx) => {
     if (env.JWT_SECRET === env.JWT_REFRESH_SECRET) {

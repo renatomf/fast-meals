@@ -8,6 +8,8 @@
     "start": "node src/server.ts",
     "seed": "node --env-file-if-exists=../.env src/db/seed.ts",
     "seed:load": "node --env-file-if-exists=../.env src/db/seed-load.ts",
+    "bench:assignment": "node bench/assignment.ts",
+    "bench:listings": "node --env-file-if-exists=../.env bench/listings.ts",
     "db:generate": "drizzle-kit generate",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
@@ -32,6 +34,7 @@
     "@types/bcrypt": "6.0.0",
     "@types/pg": "8.23.1",
     "drizzle-kit": "0.31.11",
+    "fast-check": "4.10.2",
     "pino-pretty": "13.2.0",
     "vitest": "5.0.5"
   }

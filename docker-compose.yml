@@ -38,6 +38,8 @@ services:
       # O painel chega pela nginx do frontend; sem confiar nesse salto, todo usuário
       # teria o IP da nginx e dividiria o mesmo limite de requisições.
       TRUST_PROXY_HOPS: 1
+      # Liga o botão do cenário de demonstração na tela de despacho (POST /api/dispatch/demo-scenario).
+      DEMO_MODE: "true"
     # Só em 127.0.0.1: confiando num proxy, quem falasse direto com a porta 3001 pela
     # rede poderia forjar o X-Forwarded-For. Swagger e testes manuais usam a máquina local.
     ports:
