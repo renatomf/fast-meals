@@ -6,18 +6,28 @@ Números medidos em 24/10/2026, não estimados. O enunciado pede listagens abaix
 
 ## Algoritmo de atribuição
 
-`npm run bench:assignment`. Pontos aleatórios numa área de cerca de 20 × 20 km em São Paulo, semente fixa, distâncias por Haversine. O tempo é só o do algoritmo sobre a matriz pronta; dois aquecimentos antes das medições.
+`npm run bench:assignment`. Distâncias por Haversine, semente fixa, dois aquecimentos antes das medições, só o tempo do algoritmo sobre a matriz pronta. Duas geometrias:
 
-| Pedidos × entregadores | Húngaro (mediana / p95) | Guloso (mediana) | Distância a mais do guloso |
-| ---------------------- | ----------------------- | ---------------- | -------------------------- |
-| 50 × 30                | 0,06 ms / 0,12 ms       | 0,21 ms          | +4,4%                      |
-| 200 × 200              | 3,62 ms / 5,34 ms       | 11,91 ms         | +32,7%                     |
-| 500 × 500              | 28,31 ms / 31,33 ms     | 115,58 ms        | +31,3%                     |
+- **espalhada:** pontos aleatórios numa área de cerca de 20 × 20 km em São Paulo, o caso comum;
+- **em fila:** pedidos numa linha norte–sul e entregadores numa leste–oeste, a cada ~11 m. Custos tão regulares obrigam o Húngaro a percorrer caminhos aumentantes longos. É o pior caso que encontrei.
 
-- O caso do enunciado (50 × 30) leva 0,06 ms, quatro ordens de grandeza abaixo do limite de 2 s.
-- O Húngaro é mais rápido que o guloso nas três medidas. O guloso ordena as n·m células da matriz, O(n·m·log(n·m)); o Húngaro faz O(n²·m) operações simples sobre arrays tipados.
-- A diferença de qualidade cresce com o tamanho: com poucos entregadores por pedido, quase toda escolha gulosa é a certa; com 200 de cada lado, o guloso roda um terço a mais.
+| Geometria | Pedidos × entregadores | Húngaro (mediana / p95) | Guloso (mediana) | Distância a mais do guloso |
+| --------- | ---------------------- | ----------------------- | ---------------- | -------------------------- |
+| espalhada | 50 × 30                | 0,07 ms / 0,23 ms       | 0,28 ms          | +4,4%                      |
+| espalhada | 200 × 200              | 3,97 ms / 6,05 ms       | 10,16 ms         | +32,7%                     |
+| espalhada | 500 × 500              | 28,96 ms / 29,59 ms     | 76,30 ms         | +31,3%                     |
+| em fila   | 50 × 30                | 0,15 ms / 0,17 ms       | 0,20 ms          | +0,0%                      |
+| em fila   | 200 × 200              | 17,14 ms / 18,83 ms     | 5,86 ms          | +0,0%                      |
+| em fila   | 500 × 500              | 251,82 ms / 255,40 ms   | 39,15 ms         | +0,0%                      |
+
+- O caso do enunciado (50 × 30) leva menos de 0,3 ms nas duas geometrias, contra o limite de 2 s.
+- Na geometria espalhada, a realista, o Húngaro é mais rápido que o guloso e o guloso roda até um terço a mais. Na geometria em fila, o guloso acerta o ótimo e é mais rápido: os custos regulares que travam o Húngaro são justamente os que facilitam a escolha gulosa.
+- A primeira versão deste benchmark só tinha a geometria espalhada e mostrava 28 ms para 500 × 500. Foi um teste do limite de lote, com pontos em fila, que revelou o pior caso, quase dez vezes mais lento.
 - No endpoint, com o seed oficial, o Húngaro percorre 6,17 km contra 7,32 km do guloso (15,7% a menos). Com o cenário de demonstração, 21,56 km contra 38,11 km (43,4% a menos).
+
+### Limite de lote
+
+O algoritmo roda no processo da API, e o Node atende uma requisição por vez enquanto ele calcula. Medi o Húngaro fora do endpoint em matrizes maiores: 108 ms para 1.000 × 1.000 aleatória e 717 ms para 2.000 × 2.000. Por isso o endpoint otimiza no máximo os **500 pedidos prontos mais antigos**; os demais voltam como `unassigned` com o motivo "Waiting for the next optimization batch", e o log registra um aviso. Mesmo no pior caso medido, 500 pedidos ficam em cerca de 250 ms.
 
 ## Listagens e relatórios
 
