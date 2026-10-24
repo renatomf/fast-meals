@@ -1,6 +1,6 @@
 # Contexto de build: raiz do repositório (o backend depende do workspace packages/contracts).
 
-FROM node:24.22.1-alpine AS deps
+FROM node:26.12.0-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 COPY packages/contracts/package.json packages/contracts/
@@ -8,7 +8,7 @@ COPY backend/package.json backend/
 COPY frontend/package.json frontend/
 RUN npm ci --omit=dev --workspace @fastmeals/backend
 
-FROM node:24.22.1-alpine AS runtime
+FROM node:26.12.0-alpine AS runtime
 ENV NODE_ENV=production
 # O runtime só executa `node`. npm, npx, corepack e yarn vêm na imagem base e trazem
 # dependências próprias com CVEs (undici, brace-expansion...); fora daqui, fora do scan.
