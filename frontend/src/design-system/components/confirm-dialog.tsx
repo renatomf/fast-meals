@@ -34,7 +34,8 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      {/* alertdialog: o leitor de tela anuncia que a ação pede uma decisão antes de seguir. */}
+      <DialogContent role="alertdialog">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
