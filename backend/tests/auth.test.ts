@@ -1,7 +1,9 @@
-import { sql } from "drizzle-orm";
+import { createHash, randomUUID } from "node:crypto";
+import bcrypt from "bcrypt";
+import { eq, sql } from "drizzle-orm";
 import { createSigner } from "fast-jwt";
 import type { LightMyRequestResponse } from "fastify";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { App } from "../src/app.ts";
 import { seedOfficialData } from "../src/db/seed-official.ts";
 import { refreshTokens } from "../src/models/index.ts";
@@ -305,5 +307,81 @@ describe("POST /api/auth/logout", () => {
     const response = await app.inject({ method: "POST", url: "/api/auth/logout" });
 
     expect(response.statusCode).toBe(204);
+  });
+});
+
+function sha256(value: string) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+describe("defense in depth", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("stores only the SHA-256 of the refresh token, never the token itself", async () => {
+    const { refreshToken } = await loginTokens();
+
+    const stored = await db.select({ tokenHash: refreshTokens.tokenHash }).from(refreshTokens);
+
+    expect(stored).toEqual([{ tokenHash: sha256(refreshToken) }]);
+  });
+
+  // Medir tempo seria instável no CI; verificar que o bcrypt roda prova a mesma coisa:
+  // sem o hash fictício, o email inexistente responderia sem os ~250 ms do bcrypt.
+  it("runs bcrypt even when the email does not exist, so timing does not reveal accounts", async () => {
+    const compare = vi.spyOn(bcrypt, "compare");
+
+    await login({ email: "nobody@fastmeals.com", password: "Admin@123" });
+
+    expect(compare).toHaveBeenCalledOnce();
+    expect(compare.mock.calls[0]?.[1]).toMatch(/^\$2b\$12\$/);
+  });
+
+  it("rejects an access token without expiration, even with a valid signature", async () => {
+    const { user } = await loginTokens();
+    const neverExpires = createSigner({ key: testEnv.JWT_SECRET })({
+      sub: user.id,
+      role: "admin",
+    });
+
+    const response = await me(neverExpires);
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json().error.code).toBe("INVALID_TOKEN");
+  });
+
+  it("rejects a refresh token without expiration, even when it is in the database", async () => {
+    const { user } = await loginTokens();
+    const familyId = randomUUID();
+    const neverExpires = createSigner({ key: testEnv.JWT_REFRESH_SECRET })({
+      sub: user.id,
+      fam: familyId,
+      jti: randomUUID(),
+    });
+    await db.insert(refreshTokens).values({
+      userId: user.id,
+      familyId,
+      tokenHash: sha256(neverExpires),
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+
+    const response = await refresh(neverExpires);
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json().error.code).toBe("INVALID_REFRESH_TOKEN");
+  });
+
+  it("deletes the user's expired refresh tokens on the next login", async () => {
+    const { user } = await loginTokens();
+    await db.execute(sql`update refresh_tokens set expires_at = now() - interval '1 second'`);
+
+    await loginTokens();
+
+    const expired = await db
+      .select({ id: refreshTokens.id })
+      .from(refreshTokens)
+      .where(sql`${refreshTokens.expiresAt} < now() and ${eq(refreshTokens.userId, user.id)}`);
+    expect(expired).toHaveLength(0);
   });
 });

@@ -77,7 +77,8 @@ describe("authorization", () => {
     const response = await app.inject({
       method: "GET",
       url: "/products",
-      headers: { authorization: "Basic YWRtaW46YWRtaW4=" },
+      // Token válido com o esquema errado: só o esquema pode causar a recusa.
+      headers: { authorization: "Basic admin-token" },
     });
 
     expect(response.statusCode).toBe(401);
