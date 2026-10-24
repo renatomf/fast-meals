@@ -59,6 +59,7 @@ backend/             API Fastify (Node 24 executa o TypeScript direto, sem build
 frontend/            Painel React + Vite + Tailwind + shadcn/ui
 packages/contracts/  Schemas Zod e tipos compartilhados entre front e back
 docker/postgres/     Imagem endurecida do PostgreSQL
+e2e/                 Testes Playwright e de acessibilidade (axe)
 docs/                Enunciado, especificação, ADRs e rastreabilidade
 seed/data.json       Dados oficiais do desafio
 ```
@@ -70,9 +71,12 @@ npm run lint         # inclui as regras de fronteira entre camadas
 npm run typecheck
 npm test             # o backend precisa do PostgreSQL: docker compose up -d db
 npm run build
+npm run test:e2e     # Playwright contra o Docker: docker compose up --build antes
 ```
 
-O CI roda tudo isso, verifica que não há JavaScript no repositório, audita dependências e imagens Docker e sobe a stack completa com o mesmo comando acima.
+Na primeira vez, o E2E precisa do navegador: `npx playwright install chromium` dentro de `e2e/`.
+
+O CI roda tudo isso, verifica que não há JavaScript no repositório, audita dependências e imagens Docker e sobe a stack completa com o mesmo comando acima para rodar o E2E.
 
 ## Documentação
 

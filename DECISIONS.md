@@ -43,6 +43,7 @@ Resumo: `backend/`, `frontend/` e `packages/contracts/` num monorepo com npm wor
 | React Hook Form + `@hookform/resolvers`  | Formulários                                     | Usa os mesmos schemas Zod de `packages/contracts` que validam a API: front e back não divergem nas mensagens nem nas regras                                                                                                                                                                                                                                        |
 | Recharts                                 | Gráficos                                        | Componentes React declarativos, cores dos tokens via variáveis CSS. Carregado só quando o dashboard abre                                                                                                                                                                                                                                                           |
 | Sonner                                   | Avisos                                          | Toasts acessíveis, com tema claro/escuro                                                                                                                                                                                                                                                                                                                           |
+| Playwright + `@axe-core/playwright`      | Testes E2E e acessibilidade                     | Navegador de verdade contra o mesmo `docker compose` do avaliador. O axe aplica as regras WCAG 2.1 A e AA em cada tela, nos dois temas                                                                                                                                                                                                                             |
 | Testing Library + MSW                    | Testes do front                                 | Testa pelo que o usuário vê (papéis e rótulos). O MSW simula a rede, então os testes de integração usam o app inteiro, com roteador e providers reais                                                                                                                                                                                                              |
 
 ## Premissas sobre pontos ambíguos do enunciado
@@ -151,6 +152,15 @@ Migrations e seeds usam um pool sem esses limites, porque um `CREATE INDEX` numa
 - **Sem TanStack Table.** Paginação, filtros e ordenação acontecem no servidor; uma biblioteca de tabela resolveria no cliente o que já está resolvido na API. A `DataTable` do design system é genérica e tem menos de 100 linhas.
 - **Carga sob demanda.** Dashboard e pedidos são carregados quando a rota abre. O bundle inicial caiu de 999 kB para 404 kB (129 kB com gzip), e o Recharts só chega com o dashboard.
 
+### Testes E2E
+
+Os testes de [`e2e/`](e2e/) rodam no Chromium contra o ambiente do Docker Compose, com nginx, API e banco reais. Cada teste cria os próprios pedidos, com nome único, e não depende do estado do seed. Duas regras de segurança da API moldaram a suíte:
+
+- **Um login por suíte.** O login aceita 10 tentativas por minuto por IP. A suíte inteira faz 7 logins, num único worker e sem retry: repetir testes no mesmo minuto trocaria a falha real por um 429.
+- **Sem sessão salva entre testes.** O jeito usual de acelerar E2E é logar uma vez e reaproveitar o cookie. Aqui o refresh token rotaciona a cada uso, e o segundo teste a apresentar o mesmo cookie seria tratado como roubo de token. Cada suíte loga uma vez e compartilha a página entre os testes, em modo serial.
+
+O logotipo fica fora da verificação de contraste: a WCAG isenta logotipos (critério 1.4.3), e o verde da marca sobre branco não passaria. O resto do texto é verificado.
+
 ## Dificuldades encontradas
 
 **O lint de arquitetura não verificava pacotes npm.** Escrevi a regra "algoritmos não importam `fastify`" e ela passava em silêncio. Criei arquivos com violações de propósito e confirmei que só as dependências locais eram checadas. A causa estava no código do plugin: pacotes externos só são avaliados com a opção `checkAllOrigins: true`, que o README não menciona. Desde então, toda regra nova de fronteira é testada com uma violação proposital antes de ser considerada pronta.
@@ -180,6 +190,15 @@ No mesmo trabalho reescrevi o Húngaro sobre um array plano, esperando ganhar ve
 **Testes que passavam com a proteção removida.** Depois do episódio do lock, passei a validar cada medida de segurança removendo-a de propósito e conferindo que algum teste falha. Na primeira rodada, 5 de 24 alterações passaram despercebidas: aceitar outro esquema além de `Bearer`, pular o bcrypt para email inexistente, guardar o refresh token em texto puro, aceitar token sem `exp` e não limpar tokens vencidos. Escrevi os testes que faltavam. Na rodada das medidas novas, mais dois furos apareceram: o teste da janela do bloqueio avançava o relógio exatamente o tamanho da janela, quando a conta dá zero mesmo com a expiração quebrada, e a limpeza de memória não tinha teste. Hoje cada uma dessas alterações derruba pelo menos um teste.
 
 **A opção do MSW que deveria falhar os testes era ignorada.** Configurei o servidor de mocks para falhar o teste em qualquer requisição sem handler. O typecheck acusou a opção: no MSW 3 ela mudou de nome (`onUnhandledRequest` virou `onUnhandledFrame`), e em tempo de execução o nome antigo era ignorado sem aviso, deixando só um log. Os testes passavam do mesmo jeito, mas uma chamada esquecida não teria derrubado nenhum. Validei os testes do front como os do back: 8 alterações propositais (aceitar redirect externo, não enviar o token, deixar o viewer agir, cancelar sem confirmação, entre outras), e todas derrubam algum teste.
+
+**O E2E achou quatro defeitos que os testes de componente não viam.** Na primeira rodada:
+
+- **F5 rápido derrubava a sessão.** Um reload no meio de uma renovação cancelava a requisição. O servidor já tinha rotacionado o token, mas o navegador nunca gravava o cookie novo; no reload, o token antigo caía na janela de tolerância, recebia 401, e o usuário voltava ao login. Também aconteceria numa rede instável. A primeira ideia foi mudar o backend para aceitar o token antigo dentro da janela, mas isso afrouxaria a detecção de roubo da [ADR 0004](docs/adr/0004-token-storage-and-rotation.md). A correção ficou no cliente: o refresh usa `fetch` com `keepalive`, que o navegador completa mesmo com a página recarregando, e o cookie novo é gravado. O mesmo roteiro (três ciclos de navegação e F5 seguidos) passou a manter a sessão.
+- **O botão principal sumia no tema escuro.** O `tailwind-merge` não conhece o tamanho de fonte customizado `text-ui`, tratou-o como cor e descartou o `text-primary-foreground` do botão: texto claro sobre fundo claro, contraste 1,06:1. O defeito atingia todo botão de tamanho médio, o padrão. O `cn` agora registra `text-ui` como tamanho, e um teste unitário falha se a cor sumir de novo.
+- **O verde de texto não atingia o contraste mínimo.** `#03833f` sobre o fundo verde-claro dava 4,41:1, abaixo dos 4,5:1 do nível AA, no item ativo do menu, no selo "Admin" e no status "Entregue". Passou a `#037a3b` (4,95:1), visualmente quase igual.
+- **Pedidos só abriam com o mouse.** As linhas da tabela tinham `onClick` e nada mais; pelo teclado não havia como abrir um pedido no desktop. A linha clicável agora recebe foco e abre com Enter ou Espaço.
+
+Um quinto ajuste veio do teste de rota inexistente: o 404 aparecia fora do shell e sem passar pelo login. Uma rota coringa dentro da área autenticada resolveu os dois.
 
 ## Uso de IA
 
