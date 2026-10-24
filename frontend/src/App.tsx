@@ -1,7 +1,7 @@
 import { Plus } from "lucide-react";
-import { Button } from "@/design-system/ui/button";
-import { ApiStatus } from "./api-status";
-import { ThemeToggle } from "./theme-toggle";
+import { Button } from "@/components/ui/button";
+import { ApiStatus } from "@/components/api-status";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const statuses = [
   { label: "Pendente", className: "bg-status-pending" },

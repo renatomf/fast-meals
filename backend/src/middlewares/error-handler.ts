@@ -1,7 +1,7 @@
 import type { ErrorResponse } from "@fastmeals/contracts";
 import type { FastifyError, FastifyReply, FastifyRequest } from "fastify";
 import { hasZodFastifySchemaValidationErrors } from "fastify-type-provider-zod";
-import { AppError } from "./app-error.ts";
+import { AppError } from "../utils/app-error.ts";
 
 function send(reply: FastifyReply, statusCode: number, body: ErrorResponse) {
   return reply.status(statusCode).send(body);

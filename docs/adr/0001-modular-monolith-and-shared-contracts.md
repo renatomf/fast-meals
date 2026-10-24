@@ -16,7 +16,19 @@ Duas coisas me preocupavam desde o início:
 
 - **Um monorepo com npm workspaces**: `backend/`, `frontend/` e `packages/contracts/`. Mantive os nomes de pasta do enunciado para que os comandos do README funcionem sem adaptação.
 - **`packages/contracts`** guarda os schemas Zod e os tipos que front e back compartilham. O mesmo schema valida a requisição no Fastify, gera o OpenAPI e valida o formulário no React. O pacote é consumido como código-fonte TypeScript, sem build próprio.
-- **Backend como monólito modular**: um módulo por domínio (`products`, `orders`, `dispatch`...), cada um com `routes → service → repository`. Domínio e algoritmos não conhecem HTTP nem banco.
+- **Backend como monólito modular**: um módulo por domínio (`products`, `orders`, `dispatch`...), cada um com `routes → controller → service → repository`. Domínio e algoritmos não conhecem HTTP nem banco.
+- **Os nomes de pasta sugeridos no enunciado foram mantidos.** A diferença é que, em vez de uma pasta `controllers/` com todos os controllers, cada domínio agrupa os seus arquivos. Assim, mudar a regra de pedidos é mexer numa pasta só:
+
+  | Sugestão do enunciado                                                                  | Onde está                                                                                     |
+  | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+  | `backend/src/routes`, `controllers`, `services`                                        | `backend/src/modules/<domínio>/<domínio>.{routes,controller,service}.ts`                      |
+  | `backend/src/models`                                                                   | `backend/src/models` (tabelas Drizzle)                                                        |
+  | `backend/src/middlewares`, `utils`, `algorithms`                                       | mesmos nomes                                                                                  |
+  | `backend/prisma` ("ou outro ORM")                                                      | `backend/drizzle` (migrations) e `backend/src/db/seed.ts`                                     |
+  | `backend/tests`, `frontend/tests`                                                      | mesmos nomes                                                                                  |
+  | `frontend/src/App.tsx`, `components`, `hooks`, `services`, `types`, `context`, `utils` | mesmos nomes                                                                                  |
+  | `frontend/src/pages`                                                                   | `frontend/src/features/<tela>/pages`, junto com os componentes, hooks e services daquela tela |
+
 - **Backend sem etapa de build.** O Node 24 executa TypeScript nativamente (type stripping), então em produção rodo `node src/server.ts`. O `tsc` serve apenas para checagem de tipos. Isso exige sintaxe apagável (`erasableSyntaxOnly`): nada de `enum`, `namespace` ou parameter properties.
 - **Fronteiras verificadas no lint** com `eslint-plugin-boundaries`. Exemplos: um algoritmo não pode importar `fastify`; uma rota não pode importar o banco; uma feature do front só importa outra pelo `index.ts` dela. Uma violação quebra o CI.
 

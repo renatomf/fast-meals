@@ -45,14 +45,24 @@ npm run typecheck
 
 ## Organização
 
+Segue as pastas sugeridas no enunciado, com os arquivos de cada domínio agrupados por módulo:
+
 ```
 src/
 ├── server.ts        bootstrap e graceful shutdown
 ├── app.ts           montagem da aplicação (composition root)
 ├── config/          validação do ambiente
-├── db/              conexão com o PostgreSQL
-├── shared/errors/   erros de domínio e formato padrão de resposta
-└── modules/         um módulo por domínio (routes → service → repository)
+├── db/              conexão, migrations e seed
+├── models/          definição das tabelas (Drizzle)
+├── middlewares/     autenticação, autorização e tratamento de erros
+├── algorithms/      Haversine e algoritmo Húngaro, sem dependência de HTTP ou banco
+├── utils/           erros de domínio e funções puras
+└── modules/<domínio>/
+    ├── <domínio>.routes.ts       rotas e schemas de entrada/saída
+    ├── <domínio>.controller.ts   traduz HTTP para chamadas ao service
+    ├── <domínio>.service.ts      regras de negócio (única porta de entrada do módulo)
+    └── <domínio>.repository.ts   acesso ao banco
+tests/               testes de integração e unitários
 ```
 
-As fronteiras entre camadas são verificadas pelo ESLint: uma rota não acessa o banco diretamente e um algoritmo não importa Fastify, por exemplo.
+As fronteiras entre camadas são verificadas pelo ESLint. Uma rota ou controller não acessa o banco diretamente, um algoritmo não importa Fastify e um módulo só usa outro pelo `*.service.ts` dele.

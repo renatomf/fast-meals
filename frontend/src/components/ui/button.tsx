@@ -1,7 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { Slot } from "radix-ui";
 import type { ComponentProps } from "react";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/utils/cn";
 
 // Base do shadcn/ui, ajustada para um painel operacional: alturas menores (32px no padrão),
 // secundário com borda e sombra leve em vez de fundo cinza, e foco usando o anel do token.

@@ -6,10 +6,11 @@ Painel administrativo de uma plataforma de delivery: cardápio, pedidos, entrega
 
 ## Rodando com Docker
 
-Requer Docker com Compose v2.
+Requer Docker com Compose v2. Os dois comandos funcionam (o segundo é o do enunciado):
 
 ```bash
 docker compose up --build
+docker-compose up --build
 ```
 
 | Serviço                       | Endereço                                                                          |

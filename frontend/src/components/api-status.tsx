@@ -1,6 +1,6 @@
 import type { HealthResponse } from "@fastmeals/contracts";
 import { useEffect, useState } from "react";
-import { cn } from "@/shared/lib/cn";
+import { cn } from "@/utils/cn";
 
 type Status = "checking" | "up" | "degraded" | "offline";
 

@@ -11,7 +11,7 @@ import {
 } from "fastify-type-provider-zod";
 import type { Env } from "./config/env.ts";
 import { healthRoutes } from "./modules/health/health.routes.ts";
-import { errorHandler, notFoundHandler } from "./shared/errors/error-handler.ts";
+import { errorHandler, notFoundHandler } from "./middlewares/error-handler.ts";
 
 export type AppDependencies = {
   env: Env;

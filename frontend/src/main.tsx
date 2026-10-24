@@ -1,10 +1,10 @@
 import "@fontsource-variable/inter";
-import "./styles.css";
+import "./styles/globals.css";
 
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { App } from "./app/app";
-import { applyTheme, initialTheme } from "./shared/theme/theme";
+import { App } from "./App";
+import { applyTheme, initialTheme } from "./utils/theme";
 
 // Aplicado antes do primeiro render para não piscar o tema errado.
 applyTheme(initialTheme());

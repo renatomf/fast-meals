@@ -38,26 +38,58 @@ const architecture = {
         capture: ["module"],
         partialMatch: false,
       },
+      { type: "be-models", pattern: "backend/src/models", partialMatch: false },
       { type: "be-db", pattern: "backend/src/db", partialMatch: false },
-      { type: "be-shared", pattern: "backend/src/shared", partialMatch: false },
+      { type: "be-middlewares", pattern: "backend/src/middlewares", partialMatch: false },
+      { type: "be-utils", pattern: "backend/src/utils", partialMatch: false },
       { type: "be-config", pattern: "backend/src/config", partialMatch: false },
 
-      { type: "fe-ui", pattern: "frontend/src/design-system/ui", partialMatch: false },
-      { type: "fe-design-system", pattern: "frontend/src/design-system", partialMatch: false },
+      { type: "fe-ui", pattern: "frontend/src/components/ui", partialMatch: false },
+      { type: "fe-components", pattern: "frontend/src/components", partialMatch: false },
       {
         type: "fe-feature",
         pattern: "frontend/src/features/*",
         capture: ["feature"],
         partialMatch: false,
       },
-      { type: "fe-shared", pattern: "frontend/src/shared", partialMatch: false },
-      { type: "fe-app", pattern: "frontend/src/app", partialMatch: false },
+      {
+        type: "fe-base",
+        pattern: [
+          "frontend/src/context",
+          "frontend/src/hooks",
+          "frontend/src/services",
+          "frontend/src/types",
+          "frontend/src/utils",
+          "frontend/src/styles",
+        ],
+        partialMatch: false,
+      },
     ],
     "boundaries/files": [
       { category: "service", pattern: "**/*.service.ts" },
       { category: "routes", pattern: "**/*.routes.ts" },
+      { category: "controller", pattern: "**/*.controller.ts" },
       { category: "repository", pattern: "**/*.repository.ts" },
-      { category: "feature-public", pattern: "frontend/src/features/*/index.ts" },
+      { category: "app-root", pattern: "frontend/src/{App,main}.tsx" },
+      // O plugin atribui todas as categorias que casam e seletores negados ("!service")
+      // não casam com arquivos sem categoria. Por isso o "interno" é definido de forma
+      // positiva: tudo exceto a porta de entrada pública do módulo ou da feature.
+      // No backend, a convenção de nomes já diz o que é interno: só o *.service.ts é público.
+      // "**" não cobre zero pastas aqui, então raiz e subpastas são listadas separadamente.
+      {
+        category: "module-internal",
+        pattern: [
+          "backend/src/modules/*/*.{routes,controller,repository,schemas}.ts",
+          "backend/src/modules/*/*/**/*.ts",
+        ],
+      },
+      {
+        category: "feature-internal",
+        pattern: [
+          "frontend/src/features/*/!(index).{ts,tsx}",
+          "frontend/src/features/*/*/**/*.{ts,tsx}",
+        ],
+      },
     ],
   },
   rules: {
@@ -73,12 +105,16 @@ const architecture = {
             disallow: { to: { element: { type: "!contracts" } } },
           },
 
-          // Domínio e algoritmos são puros: sem HTTP, sem banco, sem configuração.
+          // Domínio, algoritmos e utils são puros: sem HTTP, sem banco, sem configuração.
           {
-            from: { element: { types: ["be-algorithms", "be-domain"] } },
+            from: { element: { types: ["be-algorithms", "be-domain", "be-utils"] } },
             disallow: {
               to: [
-                { element: { types: ["be-module", "be-db", "be-config", "be-shared"] } },
+                {
+                  element: {
+                    types: ["be-module", "be-models", "be-db", "be-config", "be-middlewares"],
+                  },
+                },
                 { module: { origin: "external", source: "fastify" } },
                 { module: { origin: "external", source: "fastify-type-provider-zod" } },
                 { module: { origin: "external", source: "drizzle-orm" } },
@@ -95,29 +131,37 @@ const architecture = {
                   types: ["be-module", "be-domain"],
                   captured: { module: "!{{from.element.captured.module}}" },
                 },
-                file: { categories: "!service" },
+                file: { categories: "module-internal" },
               },
             },
           },
-          // Rotas não falam com o banco: passam sempre pelo service.
+          // Rotas e controllers não falam com o banco: passam sempre pelo service.
           {
-            from: { file: { categories: "routes" } },
+            from: { file: { categories: ["routes", "controller"] } },
             disallow: {
-              to: [{ element: { type: "be-db" } }, { file: { categories: "repository" } }],
+              to: [
+                { element: { types: ["be-db", "be-models"] } },
+                { file: { categories: "repository" } },
+              ],
             },
           },
 
+          // Ninguém importa o ponto de entrada da aplicação.
+          {
+            from: { element: { types: ["fe-ui", "fe-components", "fe-feature", "fe-base"] } },
+            disallow: { to: { file: { categories: "app-root" } } },
+          },
+          // Primitivos de UI não conhecem nada acima deles.
           {
             from: { element: { type: "fe-ui" } },
-            disallow: {
-              to: { element: { types: ["fe-design-system", "fe-feature", "fe-app"] } },
-            },
+            disallow: { to: { element: { types: ["fe-components", "fe-feature"] } } },
           },
+          // Componentes do design system não têm regra de negócio nem buscam dados.
           {
-            from: { element: { type: "fe-design-system" } },
+            from: { element: { type: "fe-components" } },
             disallow: {
               to: [
-                { element: { types: ["fe-feature", "fe-app"] } },
+                { element: { type: "fe-feature" } },
                 { module: { origin: "external", source: "@tanstack/react-query" } },
               ],
             },
@@ -126,22 +170,20 @@ const architecture = {
           {
             from: { element: { type: "fe-feature" } },
             disallow: {
-              to: [
-                {
-                  element: {
-                    type: "fe-feature",
-                    captured: { feature: "!{{from.element.captured.feature}}" },
-                  },
-                  file: { categories: "!feature-public" },
+              to: {
+                element: {
+                  type: "fe-feature",
+                  captured: { feature: "!{{from.element.captured.feature}}" },
                 },
-                { element: { type: "fe-app" } },
-              ],
+                file: { categories: "feature-internal" },
+              },
             },
           },
+          // Contexto, hooks, services, tipos e utils são a base: não dependem de telas.
           {
-            from: { element: { type: "fe-shared" } },
+            from: { element: { type: "fe-base" } },
             disallow: {
-              to: { element: { types: ["fe-design-system", "fe-feature", "fe-app"] } },
+              to: { element: { types: ["fe-ui", "fe-components", "fe-feature"] } },
             },
           },
         ],
@@ -171,7 +213,7 @@ export default defineConfig(
       globals: { ...globals.browser },
     },
     rules: {
-      // Cores soltas fogem dos tokens; toda cor vem de design-system/tokens.
+      // Cores soltas fogem dos tokens; toda cor vem de src/styles/tokens.css.
       "no-restricted-syntax": [
         "error",
         {

@@ -75,14 +75,14 @@ Legenda: ✅ entregue · 🔄 em andamento · ⏳ planejado
 
 ## 5. Frontend
 
-| ID   | Requisito                                                                                                                                                        | Status | Onde / teste                                                                         |
-| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------ |
-| UI-1 | Login com validação, erros visíveis, redirecionamento e volta ao login quando o token expira                                                                     | ⏳     |                                                                                      |
-| UI-2 | Pedidos: paginação, filtros de status e data, cliente/itens/total/status/data, ações contextuais, detalhes, indicador visual por status                          | ⏳     |                                                                                      |
-| UI-3 | Produtos: tabela paginada com busca, formulário com validação em tempo real, confirmação de exclusão, toggle de disponibilidade                                  | ⏳     |                                                                                      |
-| UI-4 | Relatórios: 4 métricas, filtro de período, pelo menos 2 gráficos                                                                                                 | ⏳     |                                                                                      |
-| UI-5 | Atribuição: pedidos `ready`, entregadores disponíveis, botão "Sugerir Atribuição Otimizada", aceitar/rejeitar cada sugestão, pedido aceito vai para `delivering` | ⏳     |                                                                                      |
-| UI-6 | Estados de loading, erro e vazio; componentização                                                                                                                | 🔄     | Tokens e primitivos em [`frontend/src/design-system`](../frontend/src/design-system) |
+| ID   | Requisito                                                                                                                                                        | Status | Onde / teste                                                                                                                     |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| UI-1 | Login com validação, erros visíveis, redirecionamento e volta ao login quando o token expira                                                                     | ⏳     |                                                                                                                                  |
+| UI-2 | Pedidos: paginação, filtros de status e data, cliente/itens/total/status/data, ações contextuais, detalhes, indicador visual por status                          | ⏳     |                                                                                                                                  |
+| UI-3 | Produtos: tabela paginada com busca, formulário com validação em tempo real, confirmação de exclusão, toggle de disponibilidade                                  | ⏳     |                                                                                                                                  |
+| UI-4 | Relatórios: 4 métricas, filtro de período, pelo menos 2 gráficos                                                                                                 | ⏳     |                                                                                                                                  |
+| UI-5 | Atribuição: pedidos `ready`, entregadores disponíveis, botão "Sugerir Atribuição Otimizada", aceitar/rejeitar cada sugestão, pedido aceito vai para `delivering` | ⏳     |                                                                                                                                  |
+| UI-6 | Estados de loading, erro e vazio; componentização                                                                                                                | 🔄     | Tokens e primitivos em [`frontend/src/components`](../frontend/src/components) e [`frontend/src/styles`](../frontend/src/styles) |
 
 ## 6. Algoritmo de atribuição
 
@@ -109,13 +109,13 @@ Legenda: ✅ entregue · 🔄 em andamento · ⏳ planejado
 
 ## Requisitos não funcionais
 
-| ID     | Requisito                                                             | Status | Onde / teste                                                                                                        |
-| ------ | --------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------- |
-| NFR-1  | Validação de body, query e params no backend                          | 🔄     | Zod + `fastify-type-provider-zod`                                                                                   |
-| NFR-2  | Formato padrão de erro `{ error: { code, message, details } }`        | ✅     | [`error-handler.ts`](../backend/src/shared/errors/error-handler.ts) · [`app.test.ts`](../backend/tests/app.test.ts) |
-| NFR-3  | Códigos HTTP semânticos (200, 201, 400, 401, 403, 404, 422, 429, 500) | 🔄     | 400, 404 e 500 já cobertos                                                                                          |
-| PERF-1 | Listagens < 200 ms com 10.000 registros                               | ⏳     |                                                                                                                     |
-| PERF-2 | Otimização < 2 s com 50 pedidos e 30 entregadores                     | ⏳     |                                                                                                                     |
+| ID     | Requisito                                                             | Status | Onde / teste                                                                                                      |
+| ------ | --------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------- |
+| NFR-1  | Validação de body, query e params no backend                          | 🔄     | Zod + `fastify-type-provider-zod`                                                                                 |
+| NFR-2  | Formato padrão de erro `{ error: { code, message, details } }`        | ✅     | [`error-handler.ts`](../backend/src/middlewares/error-handler.ts) · [`app.test.ts`](../backend/tests/app.test.ts) |
+| NFR-3  | Códigos HTTP semânticos (200, 201, 400, 401, 403, 404, 422, 429, 500) | 🔄     | 400, 404 e 500 já cobertos                                                                                        |
+| PERF-1 | Listagens < 200 ms com 10.000 registros                               | ⏳     |                                                                                                                   |
+| PERF-2 | Otimização < 2 s com 50 pedidos e 30 entregadores                     | ⏳     |                                                                                                                   |
 
 ## Testes
 
