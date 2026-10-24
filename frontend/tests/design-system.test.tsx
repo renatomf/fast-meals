@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { DataTable } from "@/design-system/components/data-table";
 import { EmptyState } from "@/design-system/components/empty-state";
 import { MetricCard } from "@/design-system/components/metric-card";
+import { Button } from "@/design-system/ui/button";
 
 type Row = { id: string; name: string };
 
@@ -47,6 +48,28 @@ describe("DataTable", () => {
     expect(onRowClick).toHaveBeenCalledWith({ id: "2", name: "Bruno" });
   });
 
+  it("opens a row with the keyboard", async () => {
+    const onRowClick = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <DataTable
+        columns={columns}
+        rows={[
+          { id: "1", name: "Ana" },
+          { id: "2", name: "Bruno" },
+        ]}
+        getRowKey={(row) => row.id}
+        onRowClick={onRowClick}
+      />,
+    );
+
+    await user.tab();
+    await user.tab();
+    await user.keyboard("{Enter}");
+
+    expect(onRowClick).toHaveBeenCalledWith({ id: "2", name: "Bruno" });
+  });
+
   it("shows the screen's empty state when there are no rows", () => {
     render(
       <DataTable
@@ -59,4 +82,16 @@ describe("DataTable", () => {
 
     expect(screen.getByText("Nenhum pedido")).toBeInTheDocument();
   });
+});
+
+describe("Button", () => {
+  // Regressão: o text-ui (tamanho) apagava o text-primary-foreground (cor) no merge.
+  it.each(["sm", "md", "lg"] as const)(
+    "keeps the text color of the primary variant (%s)",
+    (size) => {
+      render(<Button size={size}>Salvar</Button>);
+
+      expect(screen.getByRole("button", { name: "Salvar" })).toHaveClass("text-primary-foreground");
+    },
+  );
 });

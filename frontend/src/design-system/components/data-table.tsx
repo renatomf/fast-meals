@@ -75,6 +75,23 @@ export function DataTable<Row>({
                 key={getRowKey(row)}
                 data-clickable={onRowClick ? true : undefined}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
+                // Linha clicável também abre pelo teclado: Tab chega nela, Enter ou Espaço abre.
+                tabIndex={onRowClick ? 0 : undefined}
+                onKeyDown={
+                  onRowClick
+                    ? (event) => {
+                        if (event.target !== event.currentTarget) return;
+                        if (event.key !== "Enter" && event.key !== " ") return;
+                        event.preventDefault();
+                        onRowClick(row);
+                      }
+                    : undefined
+                }
+                className={
+                  onRowClick
+                    ? "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                    : undefined
+                }
               >
                 {columns.map((column) => (
                   <TableCell key={column.id} className={cn(alignClass(column), column.className)}>
