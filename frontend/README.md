@@ -54,3 +54,22 @@ Toda cor vem dos tokens: o lint recusa cores hexadecimais soltas nas classes. O 
 ## Identidade visual
 
 O verde da marca (`#06C167`) aparece no logo, no item ativo da navegação, no foco e nos indicadores positivos. As ações principais ficam em preto (branco no tema escuro): um botão verde se confundiria com o status "Entregue". O único botão verde do produto é a variante `brand`, reservada à sugestão de atribuição no despacho.
+
+## Rotas e sessão
+
+| Rota                                                      | Tela                                                                                                                       |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `/login`                                                  | Login, com contas de demonstração                                                                                          |
+| `/`                                                       | Visão geral: métricas do período contra o período anterior, receita diária, pedidos por status e pedidos que pedem atenção |
+| `/orders`                                                 | Pedidos: filtros, paginação, detalhes com histórico, ações de status e novo pedido                                         |
+| `/dispatch`, `/products`, `/delivery-persons`, `/reports` | Telas do dia 6                                                                                                             |
+
+Rotas fora do login exigem sessão; quem chega sem ela vai para o login e volta para onde estava depois de entrar. Filtros, página e pedido aberto ficam na URL.
+
+## Testes
+
+```bash
+npm test
+```
+
+Os testes de integração montam o app inteiro (roteador, providers, formulários) e simulam só a rede, com MSW. Uma requisição sem handler falha o teste.
