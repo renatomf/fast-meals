@@ -1,6 +1,7 @@
 import type { ListOrdersQuery, OrderStatus } from "@fastmeals/contracts";
-import { and, asc, count, desc, eq, gte, inArray, isNull, lt, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNull, type SQL } from "drizzle-orm";
 import type { Executor } from "../../db/client.ts";
+import { withinDays } from "../../db/sao-paulo-days.ts";
 import {
   deliveryPersons,
   orderItems,
@@ -32,21 +33,10 @@ const orderColumns = {
 
 const sortColumns = { createdAt: orders.createdAt, totalAmount: orders.totalAmount } as const;
 
-// Os dias do filtro são dias de São Paulo: "2026-10-20" vai de 00:00 a 23:59:59 locais.
-function startOfDay(date: string): SQL {
-  return sql`(${date}::date)::timestamp at time zone 'America/Sao_Paulo'`;
-}
-
 function listFilters(query: ListOrdersQuery): SQL | undefined {
   return and(
     query.status ? eq(orders.status, query.status) : undefined,
-    query.startDate ? gte(orders.createdAt, startOfDay(query.startDate)) : undefined,
-    query.endDate
-      ? lt(
-          orders.createdAt,
-          sql`((${query.endDate}::date + 1)::timestamp at time zone 'America/Sao_Paulo')`,
-        )
-      : undefined,
+    withinDays(orders.createdAt, query),
   );
 }
 
