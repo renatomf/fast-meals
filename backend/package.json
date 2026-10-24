@@ -8,6 +8,8 @@
     "start": "node src/server.ts",
     "seed": "node --env-file-if-exists=../.env src/db/seed.ts",
     "seed:load": "node --env-file-if-exists=../.env src/db/seed-load.ts",
+    "bench:assignment": "node bench/assignment.ts",
+    "bench:listings": "node --env-file-if-exists=../.env bench/listings.ts",
     "db:generate": "drizzle-kit generate",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
