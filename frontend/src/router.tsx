@@ -80,6 +80,13 @@ const comingSoon = <TPath extends string>(path: TPath, title: string) =>
     component: () => <ComingSoonPage title={title} />,
   });
 
+// Endereço desconhecido também passa pelo login e mostra o 404 dentro do shell, com a navegação.
+const notFoundRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "$",
+  component: NotFoundPage,
+});
+
 const routeTree = rootRoute.addChildren([
   loginRoute,
   appRoute.addChildren([
@@ -89,6 +96,7 @@ const routeTree = rootRoute.addChildren([
     comingSoon("/products", "Cardápio"),
     comingSoon("/delivery-persons", "Entregadores"),
     comingSoon("/reports", "Relatórios"),
+    notFoundRoute,
   ]),
 ]);
 
