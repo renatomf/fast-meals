@@ -24,6 +24,7 @@ cp ../.env.example ../.env
 | `JWT_REFRESH_EXPIRES_IN` | `7d`                    | Validade do refresh token                                         |
 | `RATE_LIMIT_MAX`         | `100`                   | Requisições por minuto por IP (o login tem limite próprio de 10)  |
 | `TRUST_PROXY_HOPS`       | `0`                     | Proxies confiáveis na frente da API; `1` atrás da nginx do Docker |
+| `DEMO_MODE`              | `false`                 | `true` libera o cenário de demonstração do despacho               |
 | `PORT`                   | `3001`                  | Porta HTTP                                                        |
 | `HOST`                   | `0.0.0.0`               | Interface de escuta                                               |
 | `NODE_ENV`               | `development`           | `development`, `test` ou `production`                             |
@@ -45,12 +46,14 @@ npm run typecheck
 
 ### Banco de dados
 
-| Comando                   | O que faz                                                                                             |
-| ------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `npm run seed`            | Aplica as migrations pendentes e carrega o `seed/data.json`. Num banco que já tem dados, não faz nada |
-| `npm run seed -- --reset` | Apaga tudo e carrega de novo. Os números se repetem a cada execução (gerador de semente fixa)         |
-| `npm run seed:load`       | Acrescenta 10 mil pedidos encerrados nos últimos 90 dias, para os benchmarks de listagem e relatórios |
-| `npm run db:generate`     | Gera uma migration a partir das mudanças em `src/models` (`drizzle-kit`)                              |
+| Comando                    | O que faz                                                                                             |
+| -------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `npm run seed`             | Aplica as migrations pendentes e carrega o `seed/data.json`. Num banco que já tem dados, não faz nada |
+| `npm run seed -- --reset`  | Apaga tudo e carrega de novo. Os números se repetem a cada execução (gerador de semente fixa)         |
+| `npm run seed:load`        | Acrescenta 10 mil pedidos encerrados nos últimos 90 dias, para os benchmarks de listagem e relatórios |
+| `npm run bench:assignment` | Tempo do Húngaro e do guloso em 50 × 30, 200 × 200 e 500 × 500                                        |
+| `npm run bench:listings`   | Tempo das listagens e relatórios (rode `seed:load` antes)                                             |
+| `npm run db:generate`      | Gera uma migration a partir das mudanças em `src/models` (`drizzle-kit`)                              |
 
 O `data.json` não tem datas. O seed coloca os pedidos encerrados em horários de almoço e jantar dos últimos 30 dias e faz os pedidos em aberto terminarem a linha do tempo poucos minutos antes da execução. Cada pedido ganha um histórico de status coerente com o status final.
 
@@ -69,24 +72,30 @@ Para outro servidor, aponte `TEST_DATABASE_URL` para ele.
 
 ## Endpoints disponíveis
 
-| Rota                                             | Descrição                                                                      |
-| ------------------------------------------------ | ------------------------------------------------------------------------------ |
-| `POST /api/auth/login`                           | Email e senha → access token, refresh token e usuário                          |
-| `POST /api/auth/refresh`                         | Refresh token (corpo ou cookie) → novo par de tokens; o token usado é revogado |
-| `POST /api/auth/logout`                          | Revoga a sessão e limpa o cookie                                               |
-| `GET /api/auth/me`                               | Usuário dono do access token                                                   |
-| `GET /api/products`                              | Lista com paginação, busca por nome, filtros e ordenação                       |
-| `GET`, `PUT`, `DELETE /api/products/:id`         | Detalhe, edição parcial e exclusão (409 se estiver em pedido aberto)           |
-| `POST /api/products`                             | Cria produto                                                                   |
-| `GET /api/orders`                                | Lista com paginação, filtros de status e período e ordenação                   |
-| `GET /api/orders/:id`, `/:id/history`            | Detalhe e linha do tempo de status                                             |
-| `POST /api/orders`                               | Cria pedido; total calculado no servidor                                       |
-| `PATCH /api/orders/:id/status`                   | Muda o status pelas 7 transições permitidas                                    |
-| `PATCH /api/orders/:id/assign`                   | Atribui entregador a um pedido `ready`                                         |
-| `GET`, `POST /api/delivery-persons`              | Lista (filtros `isActive` e `available`) e cadastro                            |
-| `GET`, `PUT`, `DELETE /api/delivery-persons/:id` | Detalhe, edição parcial e remoção (409 se estiver em pedido em andamento)      |
-| `GET /api/health`                                | Status da API e do banco (200 ou 503)                                          |
-| `GET /api/docs`                                  | Swagger UI, gerado a partir dos schemas Zod                                    |
+| Rota                                             | Descrição                                                                              |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| `POST /api/auth/login`                           | Email e senha → access token, refresh token e usuário                                  |
+| `POST /api/auth/refresh`                         | Refresh token (corpo ou cookie) → novo par de tokens; o token usado é revogado         |
+| `POST /api/auth/logout`                          | Revoga a sessão e limpa o cookie                                                       |
+| `GET /api/auth/me`                               | Usuário dono do access token                                                           |
+| `GET /api/products`                              | Lista com paginação, busca por nome, filtros e ordenação                               |
+| `GET`, `PUT`, `DELETE /api/products/:id`         | Detalhe, edição parcial e exclusão (409 se estiver em pedido aberto)                   |
+| `POST /api/products`                             | Cria produto                                                                           |
+| `GET /api/orders`                                | Lista com paginação, filtros de status e período e ordenação                           |
+| `GET /api/orders/:id`, `/:id/history`            | Detalhe e linha do tempo de status                                                     |
+| `POST /api/orders`                               | Cria pedido; total calculado no servidor                                               |
+| `PATCH /api/orders/:id/status`                   | Muda o status pelas 7 transições permitidas                                            |
+| `PATCH /api/orders/:id/assign`                   | Atribui entregador a um pedido `ready`                                                 |
+| `GET`, `POST /api/delivery-persons`              | Lista (filtros `isActive` e `available`) e cadastro                                    |
+| `GET`, `PUT`, `DELETE /api/delivery-persons/:id` | Detalhe, edição parcial e remoção (409 se estiver em pedido em andamento)              |
+| `POST /api/orders/optimize-assignment`           | Sugere a atribuição de entregadores que minimiza a distância total (algoritmo Húngaro) |
+| `POST /api/dispatch/demo-scenario`               | Cria um cenário em que o guloso perde (só com `DEMO_MODE=true`)                        |
+| `GET /api/reports/revenue`                       | Receita dos pedidos entregues por dia (período obrigatório)                            |
+| `GET /api/reports/orders-by-status`              | Pedidos em cada status                                                                 |
+| `GET /api/reports/top-products`                  | Produtos mais vendidos                                                                 |
+| `GET /api/reports/average-delivery-time`         | Tempo médio de entrega, geral e por veículo                                            |
+| `GET /api/health`                                | Status da API e do banco (200 ou 503)                                                  |
+| `GET /api/docs`                                  | Swagger UI, gerado a partir dos schemas Zod                                            |
 
 Dez senhas erradas para o mesmo email em 15 minutos bloqueiam aquele email até o fim da janela, mesmo vindo de IPs diferentes ([ADR 0004](../docs/adr/0004-token-storage-and-rotation.md)). Reiniciar a API zera o contador.
 
