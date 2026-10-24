@@ -1,18 +1,23 @@
-import { afterEach, describe, expect, it } from "vitest";
-import { buildApp, type App } from "../src/app.ts";
+import { afterAll, afterEach, describe, expect, it } from "vitest";
+import type { App } from "../src/app.ts";
 import { loadEnv } from "../src/config/env.ts";
+import { buildTestApp, testEnv } from "./support/app.ts";
+import { connectTestDatabase } from "./support/database.ts";
 
-const env = loadEnv({ NODE_ENV: "test", DATABASE_URL: "postgresql://unused/test" });
-
+const { pool, db } = connectTestDatabase();
 let app: App;
 
 async function startApp({ databaseUp = true } = {}) {
-  app = await buildApp({ env, checkDatabase: async () => databaseUp });
+  app = await buildTestApp({ db, databaseUp });
   return app;
 }
 
 afterEach(async () => {
   await app.close();
+});
+
+afterAll(async () => {
+  await pool.end();
 });
 
 describe("GET /api/health", () => {
@@ -88,5 +93,41 @@ describe("cross-cutting HTTP behavior", () => {
 describe("loadEnv", () => {
   it("explains which variables are wrong", () => {
     expect(() => loadEnv({ DATABASE_URL: "mysql://nope" })).toThrow(/DATABASE_URL/);
+  });
+
+  it("converts token lifetimes to milliseconds", () => {
+    expect(testEnv.JWT_EXPIRES_IN).toBe(15 * 60 * 1000);
+    expect(testEnv.JWT_REFRESH_EXPIRES_IN).toBe(7 * 24 * 60 * 60 * 1000);
+  });
+
+  it("refuses the same secret for access and refresh tokens", () => {
+    const secret = "x".repeat(32);
+    expect(() =>
+      loadEnv({
+        DATABASE_URL: testEnv.DATABASE_URL,
+        JWT_SECRET: secret,
+        JWT_REFRESH_SECRET: secret,
+      }),
+    ).toThrow(/JWT_REFRESH_SECRET: deve ser diferente/);
+  });
+});
+
+describe("loadEnv in production", () => {
+  const exampleSecrets = {
+    DATABASE_URL: testEnv.DATABASE_URL,
+    JWT_SECRET: "sua-chave-secreta-aqui-trocar-em-producao",
+    JWT_REFRESH_SECRET: "sua-chave-refresh-aqui-trocar-em-producao",
+  };
+
+  it("refuses the public secrets from .env.example", () => {
+    expect(() => loadEnv({ ...exampleSecrets, NODE_ENV: "production" })).toThrow(
+      /JWT_SECRET: é o valor público[\s\S]*JWT_REFRESH_SECRET: é o valor público/,
+    );
+  });
+
+  it("accepts them in development, so a fresh clone runs without editing .env", () => {
+    expect(loadEnv({ ...exampleSecrets, NODE_ENV: "development" }).JWT_SECRET).toBe(
+      exampleSecrets.JWT_SECRET,
+    );
   });
 });

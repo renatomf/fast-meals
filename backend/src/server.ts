@@ -1,6 +1,7 @@
 import { buildApp } from "./app.ts";
 import { loadEnv, type Env } from "./config/env.ts";
-import { createPool, pingDatabase } from "./db/pool.ts";
+import { createDatabase } from "./db/client.ts";
+import { apiDatabaseLimits, createPool, pingDatabase } from "./db/pool.ts";
 
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 
@@ -12,8 +13,12 @@ try {
   process.exit(1);
 }
 
-const pool = createPool(env.DATABASE_URL);
-const app = await buildApp({ env, checkDatabase: () => pingDatabase(pool) });
+const pool = createPool(env.DATABASE_URL, apiDatabaseLimits);
+const app = await buildApp({
+  env,
+  db: createDatabase(pool),
+  checkDatabase: () => pingDatabase(pool),
+});
 
 async function shutdown(signal: NodeJS.Signals) {
   app.log.info({ signal }, "shutting down");
