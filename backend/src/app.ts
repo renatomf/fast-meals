@@ -22,6 +22,8 @@ import { createLoginThrottle } from "./modules/auth/login-throttle.ts";
 import { deliveryPersonsRepository } from "./modules/delivery-persons/delivery-persons.repository.ts";
 import { deliveryPersonsRoutes } from "./modules/delivery-persons/delivery-persons.routes.ts";
 import { createDeliveryPersonsService } from "./modules/delivery-persons/delivery-persons.service.ts";
+import { demoRoutes } from "./modules/demo/demo.routes.ts";
+import { createDemoService } from "./modules/demo/demo.service.ts";
 import { dispatchRepository } from "./modules/dispatch/dispatch.repository.ts";
 import { dispatchRoutes } from "./modules/dispatch/dispatch.routes.ts";
 import { createDispatchService } from "./modules/dispatch/dispatch.service.ts";
@@ -148,6 +150,14 @@ export async function buildApp({ env, db, checkDatabase, logStream }: AppDepende
       await api.register(productsRoutes, { productsService });
       await api.register(ordersRoutes, { ordersService });
       await api.register(dispatchRoutes, { dispatchService });
+      if (env.DEMO_MODE) {
+        const demoService = createDemoService({
+          ordersService,
+          deliveryPersonsService,
+          productsService,
+        });
+        await api.register(demoRoutes, { demoService });
+      }
       await api.register(deliveryPersonsRoutes, { deliveryPersonsService });
     },
     { prefix: "/api" },
