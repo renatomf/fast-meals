@@ -99,6 +99,20 @@ Dois itens continuam aparecendo no Docker Scout. Nenhum tem correção publicada
 | `libxml2` 2.13.9-r2 no PostgreSQL (1H 5M 5L)                            | Sem correção publicada                                                       | É ligado ao binário do Postgres; removê-lo exigiria compilar o Postgres sem suporte a XML | O banco não é exposto à rede (só `127.0.0.1` e a rede interna do Compose) e a aplicação não usa funções XML. Explorar exigiria já poder executar SQL arbitrário |
 | `musl` 1.2.6-r3 em todas as imagens (severidade ainda não classificada) | A correção (r6) existe, mas não chegou ao repositório estável do Alpine 3.24 | Não há versão estável para instalar                                                       | O `apk upgrade` roda em todo build e pega a correção assim que ela for publicada; o scan do CI passa a reprovar se ela ficar disponível e não for aplicada      |
 
+## Limites de tempo
+
+Sem limite, uma consulta travada (um lock esperando, um plano ruim) segura uma das dez conexões do pool para sempre; dez delas juntas e a API inteira para, inclusive o health check. Coloquei limites folgados, que servem de proteção contra travamento e não de meta de desempenho (as listagens miram menos de 200 ms):
+
+| Onde                    | Limite                                                 | Valor |
+| ----------------------- | ------------------------------------------------------ | ----- |
+| PostgreSQL, pool da API | Cada consulta (`statement_timeout`)                    | 10 s  |
+| PostgreSQL, pool da API | Transação aberta e ociosa, segurando locks             | 15 s  |
+| Pool da API             | Espera por uma conexão livre, ou pelo banco fora do ar | 5 s   |
+| Fastify                 | Requisição inteira                                     | 30 s  |
+| Fastify                 | Conexão parada                                         | 10 s  |
+
+Migrations e seeds usam um pool sem esses limites, porque um `CREATE INDEX` numa tabela grande pode passar de 10 s legitimamente. Conferi no container que uma consulta de 11 s é cancelada pelo PostgreSQL e que uma conexão parada é fechada pela API, as duas em 10,0 s.
+
 ## Dificuldades encontradas
 
 **O lint de arquitetura não verificava pacotes npm.** Escrevi a regra "algoritmos não importam `fastify`" e ela passava em silêncio. Criei arquivos com violações de propósito e confirmei que só as dependências locais eram checadas. A causa estava no código do plugin: pacotes externos só são avaliados com a opção `checkAllOrigins: true`, que o README não menciona. Desde então, toda regra nova de fronteira é testada com uma violação proposital antes de ser considerada pronta.
