@@ -1,4 +1,5 @@
 import type { OrderStatus } from "@fastmeals/contracts";
+import { eq } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { App } from "../src/app.ts";
 import { seedOfficialData } from "../src/db/seed-official.ts";
@@ -41,8 +42,10 @@ const fixture: FixtureOrder[] = [
   {
     createdAtSaoPaulo: "2025-01-10T19:00",
     status: "delivered",
+    // Água (R$ 5) vem antes de pudim (R$ 14) no alfabeto e depois na receita: só o
+    // desempate por receita põe o pudim na frente.
     items: [
-      ["Suco de Laranja Natural", 1],
+      ["Agua Mineral 500ml", 1],
       ["Pudim de Leite Condensado", 1],
     ],
     delivery: { by: "Ana Ferreira", minutes: 50 },
@@ -138,6 +141,9 @@ async function insertFixture() {
 beforeAll(async () => {
   await seedOfficialData(db, { reset: true });
   await insertFixture();
+  // O X-Burger fica mais caro depois das vendas: os relatórios devem usar o preço gravado
+  // em cada item (32,90), não o atual.
+  await db.update(products).set({ price: "40.00" }).where(eq(products.name, "X-Burger Especial"));
   viewerToken = await tokenFor(db, "viewer");
 });
 
@@ -162,12 +168,12 @@ describe("GET /api/reports/revenue: receita por período", () => {
     expect(response.json()).toEqual({
       startDate: "2025-01-10",
       endDate: "2025-01-13",
-      // 65,80 (2 X-Burger) + 26,50 (suco e pudim) + 32,90 (X-Burger das 23h30 do dia 12)
-      totalRevenue: 125.2,
+      // 65,80 (2 X-Burger) + 19,00 (água e pudim) + 32,90 (X-Burger das 23h30 do dia 12)
+      totalRevenue: 117.7,
       totalOrders: 3,
-      averageOrderValue: 41.73,
+      averageOrderValue: 39.23,
       dailyRevenue: [
-        { date: "2025-01-10", revenue: 92.3, orders: 2 },
+        { date: "2025-01-10", revenue: 84.8, orders: 2 },
         { date: "2025-01-11", revenue: 0, orders: 0 },
         { date: "2025-01-12", revenue: 32.9, orders: 1 },
         { date: "2025-01-13", revenue: 0, orders: 0 },
@@ -232,9 +238,9 @@ describe("GET /api/reports/top-products: produtos mais vendidos", () => {
     ).toEqual([
       // 2 + 1 X-Burger entregues; os 3 do pedido cancelado não contam.
       { productName: "X-Burger Especial", totalQuantity: 3, totalRevenue: 98.7 },
-      // Pudim e suco empatam em quantidade; o pudim fatura mais.
+      // Pudim e água empatam em quantidade; o pudim fatura mais.
       { productName: "Pudim de Leite Condensado", totalQuantity: 1, totalRevenue: 14 },
-      { productName: "Suco de Laranja Natural", totalQuantity: 1, totalRevenue: 12.5 },
+      { productName: "Agua Mineral 500ml", totalQuantity: 1, totalRevenue: 5 },
     ]);
   });
 
