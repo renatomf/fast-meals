@@ -111,3 +111,23 @@ describe("loadEnv", () => {
     ).toThrow(/JWT_REFRESH_SECRET: deve ser diferente/);
   });
 });
+
+describe("loadEnv in production", () => {
+  const exampleSecrets = {
+    DATABASE_URL: testEnv.DATABASE_URL,
+    JWT_SECRET: "sua-chave-secreta-aqui-trocar-em-producao",
+    JWT_REFRESH_SECRET: "sua-chave-refresh-aqui-trocar-em-producao",
+  };
+
+  it("refuses the public secrets from .env.example", () => {
+    expect(() => loadEnv({ ...exampleSecrets, NODE_ENV: "production" })).toThrow(
+      /JWT_SECRET: é o valor público[\s\S]*JWT_REFRESH_SECRET: é o valor público/,
+    );
+  });
+
+  it("accepts them in development, so a fresh clone runs without editing .env", () => {
+    expect(loadEnv({ ...exampleSecrets, NODE_ENV: "development" }).JWT_SECRET).toBe(
+      exampleSecrets.JWT_SECRET,
+    );
+  });
+});

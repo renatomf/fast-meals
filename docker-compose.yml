@@ -30,7 +30,9 @@ services:
       CORS_ORIGIN: http://localhost:3000
       LOG_LEVEL: info
       # Segredos de desenvolvimento, como a senha do banco acima. Em produção vêm de um
-      # cofre de segredos, nunca do repositório.
+      # cofre de segredos, nunca do repositório. Ficam fixos aqui de propósito: interpolar
+      # ${JWT_SECRET} puxaria o .env da raiz, e os valores de exemplo dele derrubam a API
+      # em produção.
       JWT_SECRET: dev-access-secret-change-me-in-production
       JWT_REFRESH_SECRET: dev-refresh-secret-change-me-in-production
       # O painel chega pela nginx do frontend; sem confiar nesse salto, todo usuário
