@@ -37,7 +37,10 @@ export const products = pgTable(
     index("idx_products_category").on(t.category),
     index("idx_products_is_available").on(t.isAvailable),
     index("idx_products_name").on(t.name),
-    index("idx_products_created_at").on(t.createdAt.desc()),
+    // Ascendente de propósito: lido de trás para frente, atende o ORDER BY created_at DESC,
+    // id DESC da listagem. O .desc() do Drizzle gera DESC NULLS LAST, que não bate com o
+    // DESC padrão (NULLS FIRST), e o planejador ignorava o índice e lia a tabela inteira.
+    index("idx_products_created_at").on(t.createdAt, t.id),
     // A busca é ILIKE '%termo%', que um B-tree não atende; trigramas sim.
     index("idx_products_name_trgm").using("gin", t.name.op("gin_trgm_ops")),
   ],

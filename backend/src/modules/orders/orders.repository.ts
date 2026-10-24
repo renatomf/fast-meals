@@ -49,7 +49,7 @@ async function list(db: Executor, query: ListOrdersQuery) {
       .from(orders)
       .leftJoin(deliveryPersons, eq(deliveryPersons.id, orders.deliveryPersonId))
       .where(where)
-      .orderBy(direction(sortColumns[query.sortBy]), asc(orders.id))
+      .orderBy(direction(sortColumns[query.sortBy]), direction(orders.id))
       .limit(query.limit)
       .offset(pageOffset(query)),
     db.select({ total: count() }).from(orders).where(where),

@@ -39,7 +39,10 @@ export const orders = pgTable(
       sql`${t.latitude} between -90 and 90 and ${t.longitude} between -180 and 180`,
     ),
     index("idx_orders_status").on(t.status),
-    index("idx_orders_created_at").on(t.createdAt.desc()),
+    // Ascendente de propósito: lido de trás para frente, atende o ORDER BY created_at DESC,
+    // id DESC da listagem. O .desc() do Drizzle gera DESC NULLS LAST, que não bate com o
+    // DESC padrão (NULLS FIRST), e o planejador ignorava o índice e lia a tabela inteira.
+    index("idx_orders_created_at").on(t.createdAt, t.id),
     index("idx_orders_delivery_person_id").on(t.deliveryPersonId),
     index("idx_orders_status_created").on(t.status, t.createdAt),
     // Um entregador tem no máximo um pedido ativo. Garantido pelo banco, não pelo código:
