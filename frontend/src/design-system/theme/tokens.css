@@ -34,12 +34,12 @@
   /* Marca. brand-text tem contraste para texto sobre fundo claro; brand, não. */
   --brand: #06c167;
   --brand-foreground: #04210f;
-  --brand-text: #03833f;
+  --brand-text: #037a3b;
   --brand-subtle: #e7f8ef;
 
   --destructive: #d92d20;
   --destructive-text: #b42318;
-  --success: #03833f;
+  --success: #037a3b;
   --warning: #9a5b00;
   --info: #1d5bc7;
 
@@ -59,7 +59,7 @@
   --status-ready-subtle: #f2ecfe;
   --status-delivering: #0b6a80;
   --status-delivering-subtle: #e1f5f9;
-  --status-delivered: #03833f;
+  --status-delivered: #037a3b;
   --status-delivered-subtle: #e7f8ef;
   --status-cancelled: #5e6370;
   --status-cancelled-subtle: #f1f2f4;
