@@ -9,14 +9,15 @@ import {
 } from "@fastmeals/contracts";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { authorize } from "../../middlewares/auth.ts";
+import {
+  bearerSecurity as security,
+  readErrorResponses as readErrors,
+  writeErrorResponses as writeErrors,
+} from "../../utils/openapi.ts";
 import { createProductsController } from "./products.controller.ts";
 import type { ProductsService } from "./products.service.ts";
 
 type ProductsRoutesOptions = { productsService: ProductsService };
-
-const security = [{ bearerAuth: [] }];
-const readErrors = { 400: errorResponseSchema, 401: errorResponseSchema };
-const writeErrors = { ...readErrors, 403: errorResponseSchema };
 
 export const productsRoutes: FastifyPluginAsyncZod<ProductsRoutesOptions> = async (
   app,

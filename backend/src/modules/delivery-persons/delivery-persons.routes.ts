@@ -9,14 +9,15 @@ import {
 } from "@fastmeals/contracts";
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { authorize } from "../../middlewares/auth.ts";
+import {
+  bearerSecurity as security,
+  readErrorResponses as readErrors,
+  writeErrorResponses as writeErrors,
+} from "../../utils/openapi.ts";
 import { createDeliveryPersonsController } from "./delivery-persons.controller.ts";
 import type { DeliveryPersonsService } from "./delivery-persons.service.ts";
 
 type DeliveryPersonsRoutesOptions = { deliveryPersonsService: DeliveryPersonsService };
-
-const security = [{ bearerAuth: [] }];
-const readErrors = { 400: errorResponseSchema, 401: errorResponseSchema };
-const writeErrors = { ...readErrors, 403: errorResponseSchema };
 
 export const deliveryPersonsRoutes: FastifyPluginAsyncZod<DeliveryPersonsRoutesOptions> = async (
   app,
