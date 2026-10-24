@@ -19,8 +19,11 @@ WORKDIR /app
 COPY --from=deps --chown=node:node /app ./
 COPY --chown=node:node packages/contracts packages/contracts
 COPY --chown=node:node backend backend
+COPY --chown=node:node seed seed
 USER node
 WORKDIR /app/backend
 EXPOSE 3001
 # Sem etapa de build: o Node 24 executa TypeScript direto (type stripping).
-CMD ["node", "src/server.ts"]
+# Migrations e seed a cada start; o seed não toca num banco que já tem dados.
+# O exec troca o shell pelo node, que passa a receber o SIGTERM do docker stop.
+CMD ["sh", "-c", "node src/db/seed.ts && exec node src/server.ts"]
