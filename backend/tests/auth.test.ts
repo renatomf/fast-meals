@@ -7,7 +7,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import type { App } from "../src/app.ts";
 import { seedOfficialData } from "../src/db/seed-official.ts";
 import { refreshTokens } from "../src/models/index.ts";
-import { buildTestApp, testEnv } from "./support/app.ts";
+import { buildTestApp, captureLogs, testEnv } from "./support/app.ts";
 import { connectTestDatabase, truncateAll } from "./support/database.ts";
 
 const ADMIN = { email: "admin@fastmeals.com", password: "Admin@123" };
@@ -383,5 +383,113 @@ describe("defense in depth", () => {
       .from(refreshTokens)
       .where(sql`${refreshTokens.expiresAt} < now() and ${eq(refreshTokens.userId, user.id)}`);
     expect(expired).toHaveLength(0);
+  });
+});
+
+describe("security audit log", () => {
+  async function withAuditedApp(run: (audited: App) => Promise<unknown>) {
+    const logs = captureLogs();
+    const audited = await buildTestApp({ db, logs });
+    try {
+      await run(audited);
+    } finally {
+      await audited.close();
+    }
+    return logs;
+  }
+
+  it("logs failed logins with email and IP, and never the password", async () => {
+    const logs = await withAuditedApp((audited) =>
+      audited.inject({
+        method: "POST",
+        url: "/api/auth/login",
+        payload: { email: ADMIN.email, password: "Wrong@123" },
+      }),
+    );
+
+    expect(logs.find("login failed")).toEqual([
+      expect.objectContaining({ level: 40, email: ADMIN.email, ip: "127.0.0.1" }),
+    ]);
+    expect(JSON.stringify(logs.entries)).not.toContain("Wrong@123");
+  });
+
+  it("logs successful logins with the user id", async () => {
+    const logs = await withAuditedApp((audited) =>
+      audited.inject({ method: "POST", url: "/api/auth/login", payload: ADMIN }),
+    );
+
+    expect(logs.find("login succeeded")).toEqual([
+      expect.objectContaining({ level: 30, userId: expect.any(String) }),
+    ]);
+    expect(JSON.stringify(logs.entries)).not.toContain(ADMIN.password);
+  });
+
+  it("logs a warning when a rotated refresh token is reused", async () => {
+    const logs = await withAuditedApp(async (audited) => {
+      const login = await audited.inject({
+        method: "POST",
+        url: "/api/auth/login",
+        payload: ADMIN,
+      });
+      const stolen = login.json().refreshToken;
+      await audited.inject({
+        method: "POST",
+        url: "/api/auth/refresh",
+        payload: { refreshToken: stolen },
+      });
+      await db.execute(sql`update refresh_tokens set used_at = now() - interval '1 minute'
+        where used_at is not null`);
+      await audited.inject({
+        method: "POST",
+        url: "/api/auth/refresh",
+        payload: { refreshToken: stolen },
+      });
+    });
+
+    expect(logs.find("refresh token reused after rotation; session family revoked")).toEqual([
+      expect.objectContaining({ level: 40, familyId: expect.any(String) }),
+    ]);
+  });
+});
+
+describe("login lockout per email", () => {
+  const wrongPassword = { email: ADMIN.email, password: "Wrong@123" };
+  let request = 0;
+
+  // Um IP por tentativa, como num ataque distribuído: o limite por IP (10/min) fica fora
+  // do caminho e só o bloqueio por email pode responder 429.
+  function loginFrom(credentials: { email: string; password: string }) {
+    return app.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      headers: { "x-forwarded-for": `203.0.113.${request++ % 250}` },
+      payload: credentials,
+    });
+  }
+
+  beforeEach(async () => {
+    await app.close();
+    app = await buildTestApp({ db, env: { TRUST_PROXY_HOPS: 1 } });
+  });
+
+  it("refuses even the right password while the email is locked", async () => {
+    for (let i = 0; i < 10; i++) await loginFrom(wrongPassword);
+
+    const response = await loginFrom(ADMIN);
+
+    expect(response.statusCode).toBe(429);
+    expect(response.json().error).toEqual({
+      code: "RATE_LIMIT_EXCEEDED",
+      message: "Muitas tentativas de login para este email. Tente novamente em 15 min.",
+    });
+  });
+
+  it("forgets earlier failures after a successful login", async () => {
+    for (let i = 0; i < 9; i++) await loginFrom(wrongPassword);
+    expect((await loginFrom(ADMIN)).statusCode).toBe(200);
+    for (let i = 0; i < 9; i++) await loginFrom(wrongPassword);
+
+    // Sem o reset seriam 18 falhas e o email estaria bloqueado.
+    expect((await loginFrom(ADMIN)).statusCode).toBe(200);
   });
 });

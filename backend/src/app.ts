@@ -18,17 +18,22 @@ import { errorHandler, notFoundHandler } from "./middlewares/error-handler.ts";
 import { authRepository } from "./modules/auth/auth.repository.ts";
 import { authRoutes } from "./modules/auth/auth.routes.ts";
 import { createAuthService } from "./modules/auth/auth.service.ts";
+import { createLoginThrottle } from "./modules/auth/login-throttle.ts";
 import { healthRoutes } from "./modules/health/health.routes.ts";
 import { AppError } from "./utils/app-error.ts";
+
+type LogStream = { write: (line: string) => void };
 
 export type AppDependencies = {
   env: Env;
   db: Database;
   checkDatabase: () => Promise<boolean>;
+  // Só nos testes: recebe as linhas de log para verificar os eventos de segurança.
+  logStream?: LogStream;
 };
 
-function loggerOptions(env: Env): FastifyServerOptions["logger"] {
-  if (env.NODE_ENV === "test") return false;
+function loggerOptions(env: Env, logStream?: LogStream): FastifyServerOptions["logger"] {
+  if (env.NODE_ENV === "test") return logStream ? { level: "info", stream: logStream } : false;
   return {
     level: env.LOG_LEVEL,
     redact: [
@@ -46,9 +51,9 @@ function loggerOptions(env: Env): FastifyServerOptions["logger"] {
 
 // Composition root: todas as dependências entram por aqui, o que permite
 // montar a aplicação nos testes com fakes no lugar do banco.
-export async function buildApp({ env, db, checkDatabase }: AppDependencies) {
+export async function buildApp({ env, db, checkDatabase, logStream }: AppDependencies) {
   const app = Fastify({
-    logger: loggerOptions(env),
+    logger: loggerOptions(env, logStream),
     requestIdHeader: "x-request-id",
     // hop 0 é o endereço do socket; confiar em N saltos = aceitar o X-Forwarded-For
     // escrito pelos N proxies mais próximos e nada antes deles.
@@ -102,6 +107,8 @@ export async function buildApp({ env, db, checkDatabase }: AppDependencies) {
     repository: authRepository,
     accessToken: { secret: env.JWT_SECRET, ttlMs: env.JWT_EXPIRES_IN },
     refreshToken: { secret: env.JWT_REFRESH_SECRET, ttlMs: env.JWT_REFRESH_EXPIRES_IN },
+    // 10 falhas em 15 min bloqueiam o email pelo resto da janela (ADR 0004).
+    loginThrottle: createLoginThrottle({ maxFailures: 10, windowMs: 15 * 60_000 }),
     securityLog: app.log,
   });
   const authenticate = createAuthenticate(authService.verifyAccessToken);

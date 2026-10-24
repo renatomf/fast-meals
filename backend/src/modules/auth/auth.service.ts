@@ -6,6 +6,7 @@ import { z } from "zod";
 import type { Database, Executor } from "../../db/client.ts";
 import { AppError } from "../../utils/app-error.ts";
 import type { AuthRepository } from "./auth.repository.ts";
+import type { LoginThrottle } from "./login-throttle.ts";
 
 // Hash bcrypt (custo 12) de uma senha aleatória descartada. Comparar contra ele quando o
 // email não existe faz o login levar o mesmo tempo nos dois casos: a latência deixa de
@@ -35,6 +36,7 @@ type AuthServiceOptions = {
   repository: AuthRepository;
   accessToken: TokenSettings;
   refreshToken: TokenSettings;
+  loginThrottle: LoginThrottle;
   securityLog: { warn: (details: object, message: string) => void };
 };
 
@@ -46,6 +48,12 @@ const invalidCredentials = () =>
 const invalidRefreshToken = () =>
   new AppError(401, "INVALID_REFRESH_TOKEN", "Refresh token inválido ou expirado");
 const invalidAccessToken = () => new AppError(401, "INVALID_TOKEN", "Token de acesso inválido");
+const tooManyFailures = (blockedForMs: number) =>
+  new AppError(
+    429,
+    "RATE_LIMIT_EXCEEDED",
+    `Muitas tentativas de login para este email. Tente novamente em ${Math.ceil(blockedForMs / 60_000)} min.`,
+  );
 
 function sha256(token: string): string {
   return createHash("sha256").update(token).digest("hex");
@@ -56,6 +64,7 @@ export function createAuthService({
   repository,
   accessToken,
   refreshToken,
+  loginThrottle,
   securityLog,
 }: AuthServiceOptions) {
   const signAccessToken = createSigner({
@@ -102,9 +111,20 @@ export function createAuthService({
   }
 
   async function login(email: string, password: string): Promise<Session> {
+    // Bloqueado até para a senha certa: senão o atacante continuaria tentando e saberia
+    // quando acertou. Vale para qualquer email, existente ou não, e não revela contas.
+    const blockedForMs = loginThrottle.blockedForMs(email);
+    if (blockedForMs > 0) throw tooManyFailures(blockedForMs);
+
     const user = await repository.findUserByEmail(db, email);
     const passwordMatches = await bcrypt.compare(password, user?.password ?? DUMMY_PASSWORD_HASH);
-    if (!user || !passwordMatches) throw invalidCredentials();
+    if (!user || !passwordMatches) {
+      if (loginThrottle.recordFailure(email)) {
+        securityLog.warn({ email }, "login blocked for this email after repeated failures");
+      }
+      throw invalidCredentials();
+    }
+    loginThrottle.reset(email);
 
     return db.transaction(async (tx) => {
       await repository.deleteExpiredTokens(tx, user.id, new Date());

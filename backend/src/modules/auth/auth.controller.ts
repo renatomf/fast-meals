@@ -7,6 +7,7 @@ import type {
 } from "@fastmeals/contracts";
 import type { CookieSerializeOptions } from "@fastify/cookie";
 import type { FastifyReply, FastifyRequest } from "fastify";
+import { AppError } from "../../utils/app-error.ts";
 import type { AuthService, Session } from "./auth.service.ts";
 
 export const REFRESH_COOKIE = "refresh_token";
@@ -49,7 +50,18 @@ export function createAuthController(authService: AuthService) {
       request: FastifyRequest<{ Body: LoginRequest }>,
       reply: FastifyReply,
     ): Promise<LoginResponse> {
-      const session = await authService.login(request.body.email, request.body.password);
+      const { email, password } = request.body;
+      let session: Session;
+      try {
+        session = await authService.login(email, password);
+      } catch (error) {
+        // Trilha de auditoria: sem isso, uma força bruta passaria despercebida nos logs.
+        if (error instanceof AppError && error.code === "INVALID_CREDENTIALS") {
+          request.log.warn({ email, ip: request.ip }, "login failed");
+        }
+        throw error;
+      }
+      request.log.info({ userId: session.user.id, ip: request.ip }, "login succeeded");
       return respondWithSession(reply, session);
     },
 
