@@ -55,6 +55,10 @@ export async function buildApp({ env, db, checkDatabase, logStream }: AppDepende
   const app = Fastify({
     logger: loggerOptions(env, logStream),
     requestIdHeader: "x-request-id",
+    // Um cliente lento, ou mal-intencionado, não segura sockets indefinidamente: a requisição
+    // inteira tem 30 s e uma conexão parada é fechada em 10 s.
+    requestTimeout: 30_000,
+    connectionTimeout: 10_000,
     // hop 0 é o endereço do socket; confiar em N saltos = aceitar o X-Forwarded-For
     // escrito pelos N proxies mais próximos e nada antes deles.
     trustProxy: (_address: string, hop: number) => hop < env.TRUST_PROXY_HOPS,
