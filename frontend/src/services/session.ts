@@ -14,10 +14,14 @@ export function setAccessToken(token: string | null): void {
 
 export type RestoredSession = { accessToken: string; user: AuthUser };
 
+// keepalive: um F5 no meio da renovação não cancela a requisição. Sem isso, o servidor
+// já rotacionou o token, mas o navegador nunca grava o cookie novo; no reload, o token
+// antigo é recusado e o usuário cai no login (achado pelo teste E2E).
 async function requestRefresh(): Promise<Response> {
   return fetch("/api/auth/refresh", {
     method: "POST",
     credentials: "same-origin",
+    keepalive: true,
     headers: { "content-type": "application/json" },
     body: "{}",
   });
