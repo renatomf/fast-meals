@@ -1,3 +1,4 @@
+import type { UserRole } from "@fastmeals/contracts";
 import type { FastifyRequest } from "fastify";
 import type { RequestUser } from "../modules/auth/auth.service.ts";
 import { AppError } from "../utils/app-error.ts";
@@ -22,3 +23,14 @@ export function createAuthenticate(verifyAccessToken: (token: string) => Request
   };
 }
 
+// Roda depois do authenticate: sem usuário aqui é rota montada fora da área protegida.
+export function authorize(...roles: UserRole[]) {
+  return async function checkRole(request: FastifyRequest) {
+    if (!request.user) {
+      throw new AppError(401, "INVALID_TOKEN", "Envie o token de acesso no header Authorization");
+    }
+    if (!roles.includes(request.user.role)) {
+      throw new AppError(403, "FORBIDDEN", "Você não tem permissão para esta ação");
+    }
+  };
+}

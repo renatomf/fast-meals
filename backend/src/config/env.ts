@@ -29,6 +29,10 @@ const envSchema = z
     JWT_REFRESH_SECRET: secret,
     JWT_EXPIRES_IN: duration.prefault("15m"),
     JWT_REFRESH_EXPIRES_IN: duration.prefault("7d"),
+    RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
+    // Quantos proxies confiáveis existem na frente da API (o nginx do front no Docker).
+    // Sem isso, atrás de um proxy todo cliente tem o IP dele e divide o mesmo limite.
+    TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
   })
   .refine((env) => env.JWT_SECRET !== env.JWT_REFRESH_SECRET, {
     path: ["JWT_REFRESH_SECRET"],

@@ -16,6 +16,9 @@ type AuthRoutesOptions = {
   authenticate: (request: FastifyRequest) => Promise<void>;
 };
 
+// Mais apertado que o limite global de 100/min: o login é o alvo de força bruta.
+const LOGIN_RATE_LIMIT = { max: 10, timeWindow: "1 minute" };
+
 export const authRoutes: FastifyPluginAsyncZod<AuthRoutesOptions> = async (
   app,
   { authService, authenticate },
@@ -25,6 +28,7 @@ export const authRoutes: FastifyPluginAsyncZod<AuthRoutesOptions> = async (
   app.post(
     "/login",
     {
+      config: { rateLimit: LOGIN_RATE_LIMIT },
       schema: {
         tags: ["auth"],
         summary: "Autentica com email e senha",
@@ -36,6 +40,7 @@ export const authRoutes: FastifyPluginAsyncZod<AuthRoutesOptions> = async (
           200: loginResponseSchema,
           400: errorResponseSchema,
           401: errorResponseSchema,
+          429: errorResponseSchema,
         },
       },
     },
@@ -55,6 +60,7 @@ export const authRoutes: FastifyPluginAsyncZod<AuthRoutesOptions> = async (
         response: {
           200: refreshResponseSchema,
           401: errorResponseSchema,
+          429: errorResponseSchema,
         },
       },
     },
