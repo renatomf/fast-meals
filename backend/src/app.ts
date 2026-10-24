@@ -22,6 +22,9 @@ import { createLoginThrottle } from "./modules/auth/login-throttle.ts";
 import { deliveryPersonsRepository } from "./modules/delivery-persons/delivery-persons.repository.ts";
 import { deliveryPersonsRoutes } from "./modules/delivery-persons/delivery-persons.routes.ts";
 import { createDeliveryPersonsService } from "./modules/delivery-persons/delivery-persons.service.ts";
+import { dispatchRepository } from "./modules/dispatch/dispatch.repository.ts";
+import { dispatchRoutes } from "./modules/dispatch/dispatch.routes.ts";
+import { createDispatchService } from "./modules/dispatch/dispatch.service.ts";
 import { healthRoutes } from "./modules/health/health.routes.ts";
 import { ordersRepository } from "./modules/orders/orders.repository.ts";
 import { ordersRoutes } from "./modules/orders/orders.routes.ts";
@@ -132,6 +135,7 @@ export async function buildApp({ env, db, checkDatabase, logStream }: AppDepende
     repository: deliveryPersonsRepository,
   });
   const ordersService = createOrdersService({ db, repository: ordersRepository });
+  const dispatchService = createDispatchService({ db, repository: dispatchRepository });
 
   await app.register(healthRoutes, { prefix: "/api", checkDatabase });
   await app.register(authRoutes, { prefix: "/api/auth", authService, authenticate });
@@ -143,6 +147,7 @@ export async function buildApp({ env, db, checkDatabase, logStream }: AppDepende
       api.addHook("onRequest", authenticate);
       await api.register(productsRoutes, { productsService });
       await api.register(ordersRoutes, { ordersService });
+      await api.register(dispatchRoutes, { dispatchService });
       await api.register(deliveryPersonsRoutes, { deliveryPersonsService });
     },
     { prefix: "/api" },
