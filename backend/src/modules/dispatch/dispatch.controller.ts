@@ -1,4 +1,8 @@
-import type { OptimizeAssignmentQuery, OptimizeAssignmentResponse } from "@fastmeals/contracts";
+import {
+  WAITING_NEXT_BATCH,
+  type OptimizeAssignmentQuery,
+  type OptimizeAssignmentResponse,
+} from "@fastmeals/contracts";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { DispatchService } from "./dispatch.service.ts";
 
@@ -26,6 +30,12 @@ export function createDispatchController(dispatchService: DispatchService) {
         },
         "assignment optimized",
       );
+      const deferred = response.unassigned.filter(
+        (item) => item.reason === WAITING_NEXT_BATCH,
+      ).length;
+      if (deferred > 0) {
+        request.log.warn({ deferred }, "ready orders above the optimization batch limit");
+      }
       return response;
     },
   };

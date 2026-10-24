@@ -1,5 +1,7 @@
 import {
   NO_AVAILABLE_DELIVERY_PERSON,
+  OPTIMIZATION_BATCH_LIMIT,
+  WAITING_NEXT_BATCH,
   type OptimizeAssignmentResponse,
 } from "@fastmeals/contracts";
 import { greedy } from "../../algorithms/greedy.ts";
@@ -25,10 +27,13 @@ const roundTo = (value: number, decimals: number) => {
 
 export function createDispatchService({ db, repository }: DispatchServiceOptions) {
   async function optimize({ includeMatrix = false } = {}): Promise<Optimization> {
-    const [orders, people] = await Promise.all([
+    const [awaiting, people] = await Promise.all([
       repository.ordersAwaitingDeliveryPerson(db),
       repository.assignableDeliveryPersons(db),
     ]);
+    // O repositório devolve do mais antigo para o mais novo: quem espera há mais tempo entra.
+    const orders = awaiting.slice(0, OPTIMIZATION_BATCH_LIMIT);
+    const deferred = awaiting.slice(OPTIMIZATION_BATCH_LIMIT);
 
     // executionTimeMs cobre o que é do algoritmo: montar a matriz e resolvê-la. As
     // consultas ao banco ficam de fora, para o número não variar com a rede.
@@ -62,6 +67,14 @@ export function createDispatchService({ db, repository }: DispatchServiceOptions
         deliveryPersonName: person.name,
       });
     });
+
+    for (const order of deferred) {
+      unassigned.push({
+        orderId: order.id,
+        orderAddress: order.deliveryAddress,
+        reason: WAITING_NEXT_BATCH,
+      });
+    }
 
     return {
       response: {

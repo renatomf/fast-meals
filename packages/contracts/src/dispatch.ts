@@ -3,6 +3,12 @@ import { queryBooleanSchema } from "./common.ts";
 
 export const NO_AVAILABLE_DELIVERY_PERSON = "No available delivery person";
 
+// O algoritmo roda no processo da API e a bloqueia enquanto calcula: 500 pedidos × 500
+// entregadores levam ~30 ms, 2.000 × 2.000 levariam ~700 ms. Acima do limite, os pedidos mais
+// antigos entram e os demais esperam a próxima otimização (docs/benchmarks.md).
+export const OPTIMIZATION_BATCH_LIMIT = 500;
+export const WAITING_NEXT_BATCH = "Waiting for the next optimization batch";
+
 export const optimizeAssignmentQuerySchema = z.object({
   // Matriz de distâncias completa, para a visualização no painel de despacho.
   includeMatrix: queryBooleanSchema.optional(),
