@@ -1,4 +1,10 @@
 version: 2
+
+# Correções e versões minor entram automaticamente. Trocas de major (ou de linha, no
+# caso do nginx) são decisões registradas no DECISIONS.md e ficam fora daqui:
+# - Node 24 é LTS; a 26 ainda não. Runtime, imagens e @types/node andam juntos.
+# - typescript-eslint ainda não suporta TypeScript 7.
+# - No nginx, minor ímpar é a linha mainline; usamos a estável (minor par).
 updates:
   - package-ecosystem: npm
     directory: /
@@ -7,6 +13,11 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
@@ -14,6 +25,13 @@ updates:
       interval: weekly
 
   - package-ecosystem: docker
-    directories: [/backend, /frontend]
+    directories: [/backend, /frontend, /docker/postgres]
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
+      - dependency-name: postgres
+        update-types: ["version-update:semver-major"]
+      - dependency-name: nginx
+        versions: ["1.31.x", "1.33.x", "1.35.x"]
