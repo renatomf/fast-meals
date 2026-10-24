@@ -4,25 +4,37 @@ import type { ComponentProps } from "react";
 import { cn } from "@/utils/cn";
 import { DialogOverlay } from "@/design-system/ui/dialog";
 
-// Painel lateral (detalhe do pedido, formulários): o mesmo Dialog do Radix, ancorado à
-// direita. No celular ocupa a largura toda.
+// Painel lateral: o mesmo Dialog do Radix, ancorado a um lado. À direita para detalhes e
+// formulários (no celular ocupa a largura toda), à esquerda para o menu de navegação.
 
 export const Sheet = DialogPrimitive.Root;
 export const SheetClose = DialogPrimitive.Close;
 
-export function SheetContent({
-  className,
-  children,
-  ...props
-}: ComponentProps<typeof DialogPrimitive.Content>) {
+const sides = {
+  right: cn(
+    "right-0 w-full border-l sm:max-w-lg",
+    "data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right",
+  ),
+  left: cn(
+    "left-0 w-72 border-r",
+    "data-[state=open]:slide-in-from-left data-[state=closed]:slide-out-to-left",
+  ),
+} as const;
+
+type SheetContentProps = ComponentProps<typeof DialogPrimitive.Content> & {
+  side?: keyof typeof sides;
+};
+
+export function SheetContent({ className, children, side = "right", ...props }: SheetContentProps) {
   return (
     <DialogPrimitive.Portal>
       <DialogOverlay />
       <DialogPrimitive.Content
         className={cn(
-          "fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col border-l bg-popover text-popover-foreground shadow-xl sm:max-w-lg",
-          "data-[state=open]:animate-in data-[state=open]:slide-in-from-right data-[state=open]:duration-200",
-          "data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=closed]:duration-150",
+          "fixed inset-y-0 z-50 flex h-full flex-col bg-popover text-popover-foreground shadow-xl",
+          "data-[state=open]:animate-in data-[state=open]:duration-200",
+          "data-[state=closed]:animate-out data-[state=closed]:duration-150",
+          sides[side],
           className,
         )}
         {...props}
