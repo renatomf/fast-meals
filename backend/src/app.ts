@@ -20,6 +20,9 @@ import { authRoutes } from "./modules/auth/auth.routes.ts";
 import { createAuthService } from "./modules/auth/auth.service.ts";
 import { createLoginThrottle } from "./modules/auth/login-throttle.ts";
 import { healthRoutes } from "./modules/health/health.routes.ts";
+import { productsRepository } from "./modules/products/products.repository.ts";
+import { productsRoutes } from "./modules/products/products.routes.ts";
+import { createProductsService } from "./modules/products/products.service.ts";
 import { AppError } from "./utils/app-error.ts";
 
 type LogStream = { write: (line: string) => void };
@@ -117,8 +120,20 @@ export async function buildApp({ env, db, checkDatabase, logStream }: AppDepende
   });
   const authenticate = createAuthenticate(authService.verifyAccessToken);
 
+  const productsService = createProductsService({ db, repository: productsRepository });
+
   await app.register(healthRoutes, { prefix: "/api", checkDatabase });
   await app.register(authRoutes, { prefix: "/api/auth", authService, authenticate });
+
+  // Área autenticada: o hook vale para toda rota registrada aqui dentro, então uma rota
+  // nova não tem como esquecer a autenticação. O perfil é conferido rota a rota (authorize).
+  await app.register(
+    async (api) => {
+      api.addHook("onRequest", authenticate);
+      await api.register(productsRoutes, { productsService });
+    },
+    { prefix: "/api" },
+  );
 
   return app;
 }
