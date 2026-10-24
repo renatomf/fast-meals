@@ -1,10 +1,11 @@
 import "@fontsource-variable/inter";
-import "./styles/globals.css";
+import "./design-system/theme/globals.css";
 
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-import { applyTheme, initialTheme } from "./utils/theme";
+import { applyTheme, initialTheme } from "./design-system/theme/theme";
+import { ThemeProvider } from "./design-system/theme/theme-provider";
 
 // Aplicado antes do primeiro render para não piscar o tema errado.
 applyTheme(initialTheme());
@@ -14,6 +15,8 @@ if (!root) throw new Error("Elemento #root não encontrado em index.html");
 
 createRoot(root).render(
   <StrictMode>
-    <App />
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
   </StrictMode>,
 );

@@ -5,6 +5,8 @@ import { cn } from "@/utils/cn";
 
 // Base do shadcn/ui, ajustada para um painel operacional: alturas menores (32px no padrão),
 // secundário com borda e sombra leve em vez de fundo cinza, e foco usando o anel do token.
+// primary é a ação comum (preto/branco); brand, o verde, fica para a única ação de destaque
+// do produto (sugerir a atribuição no despacho).
 const buttonVariants = cva(
   [
     "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md font-medium whitespace-nowrap select-none",
@@ -17,7 +19,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-primary text-primary-foreground shadow-xs shadow-primary/20 hover:bg-primary/90 active:bg-primary/85",
+          "bg-primary text-primary-foreground shadow-xs hover:bg-primary/88 active:bg-primary/80",
+        brand:
+          "bg-brand font-semibold text-brand-foreground shadow-xs hover:bg-brand/90 active:bg-brand/85",
         secondary:
           "border bg-background text-foreground shadow-xs hover:bg-muted active:bg-secondary dark:bg-card",
         ghost: "text-muted-foreground hover:bg-muted hover:text-foreground",

@@ -1,35 +1,31 @@
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ApiStatus } from "@/components/api-status";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { Plus, Sparkles } from "lucide-react";
+import { Logo } from "@/design-system/brand/logo";
+import { ThemeToggle } from "@/design-system/components/theme-toggle";
+import { Button } from "@/design-system/ui/button";
 
 const statuses = [
-  { label: "Pendente", className: "bg-status-pending" },
-  { label: "Em preparo", className: "bg-status-preparing" },
-  { label: "Pronto", className: "bg-status-ready" },
-  { label: "Em entrega", className: "bg-status-delivering" },
-  { label: "Entregue", className: "bg-status-delivered" },
-  { label: "Cancelado", className: "bg-status-cancelled" },
+  { label: "Pendente", className: "bg-status-pending-subtle text-status-pending" },
+  { label: "Em preparo", className: "bg-status-preparing-subtle text-status-preparing" },
+  { label: "Pronto", className: "bg-status-ready-subtle text-status-ready" },
+  { label: "Em entrega", className: "bg-status-delivering-subtle text-status-delivering" },
+  { label: "Entregue", className: "bg-status-delivered-subtle text-status-delivered" },
+  { label: "Cancelado", className: "bg-status-cancelled-subtle text-status-cancelled" },
 ];
 
-// Tela provisória do dia 1: confirma tokens, temas e integração com a API.
-// Dá lugar ao app shell no dia 5.
+// Vitrine provisória do design system nos dois temas. Dá lugar ao app shell ainda no dia 5.
 export function App() {
   return (
     <div className="min-h-svh">
       <header className="flex h-14 items-center justify-between border-b bg-background px-4 sm:px-6">
-        <span className="text-sm font-semibold tracking-tight">FastMeals</span>
-        <div className="flex items-center gap-2">
-          <ApiStatus />
-          <ThemeToggle />
-        </div>
+        <Logo />
+        <ThemeToggle />
       </header>
 
       <main className="mx-auto max-w-3xl space-y-6 px-4 py-10 sm:px-6">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Fundação</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Design system</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Tokens, temas e primitivos do design system.
+            Verde de marca para identidade e seleção; ações principais em preto.
           </p>
         </div>
 
@@ -39,9 +35,9 @@ export function App() {
             {statuses.map((status) => (
               <li
                 key={status.label}
-                className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs"
+                className={`inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold ${status.className}`}
               >
-                <span aria-hidden className={`size-2 rounded-full ${status.className}`} />
+                <span aria-hidden className="size-1.5 rounded-full bg-current" />
                 {status.label}
               </li>
             ))}
@@ -57,8 +53,8 @@ export function App() {
             <Button variant="secondary">Exportar</Button>
             <Button variant="ghost">Cancelar</Button>
             <Button variant="danger">Excluir</Button>
-            <Button size="sm" variant="secondary">
-              Compacto
+            <Button variant="brand">
+              <Sparkles /> Sugerir atribuição
             </Button>
           </div>
           <p className="mt-4 text-sm text-muted-foreground tabular-nums">

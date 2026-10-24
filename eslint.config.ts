@@ -44,8 +44,19 @@ const architecture = {
       { type: "be-utils", pattern: "backend/src/utils", partialMatch: false },
       { type: "be-config", pattern: "backend/src/config", partialMatch: false },
 
-      { type: "fe-ui", pattern: "frontend/src/components/ui", partialMatch: false },
-      { type: "fe-components", pattern: "frontend/src/components", partialMatch: false },
+      // Design system: tema e marca são a fundação; ui são os primitivos; components, os
+      // componentes de produto montados sobre eles.
+      {
+        type: "fe-foundation",
+        pattern: ["frontend/src/design-system/theme", "frontend/src/design-system/brand"],
+        partialMatch: false,
+      },
+      { type: "fe-ui", pattern: "frontend/src/design-system/ui", partialMatch: false },
+      {
+        type: "fe-components",
+        pattern: "frontend/src/design-system/components",
+        partialMatch: false,
+      },
       {
         type: "fe-feature",
         pattern: "frontend/src/features/*",
@@ -60,7 +71,6 @@ const architecture = {
           "frontend/src/services",
           "frontend/src/types",
           "frontend/src/utils",
-          "frontend/src/styles",
         ],
         partialMatch: false,
       },
@@ -151,8 +161,17 @@ const architecture = {
 
           // Ninguém importa o ponto de entrada da aplicação.
           {
-            from: { element: { types: ["fe-ui", "fe-components", "fe-feature", "fe-base"] } },
+            from: {
+              element: {
+                types: ["fe-foundation", "fe-ui", "fe-components", "fe-feature", "fe-base"],
+              },
+            },
             disallow: { to: { file: { categories: "app-root" } } },
+          },
+          // Tema e marca não dependem de nenhum componente.
+          {
+            from: { element: { type: "fe-foundation" } },
+            disallow: { to: { element: { types: ["fe-ui", "fe-components", "fe-feature"] } } },
           },
           // Primitivos de UI não conhecem nada acima deles.
           {
@@ -216,7 +235,7 @@ export default defineConfig(
       globals: { ...globals.browser },
     },
     rules: {
-      // Cores soltas fogem dos tokens; toda cor vem de src/styles/tokens.css.
+      // Cores soltas fogem dos tokens; toda cor vem de src/design-system/theme/tokens.css.
       "no-restricted-syntax": [
         "error",
         {
