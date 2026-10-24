@@ -99,6 +99,9 @@ const architecture = {
         default: "allow",
         // Sem isso o plugin ignora pacotes npm, e "algoritmo não importa fastify" passaria em silêncio.
         checkAllOrigins: true,
+        // Sem isso o plugin ignora imports dentro do mesmo módulo, e um controller poderia
+        // usar o repositório do próprio módulo, pulando o service, sem nenhum aviso.
+        checkInternals: true,
         policies: [
           {
             from: { element: { type: "contracts" } },
