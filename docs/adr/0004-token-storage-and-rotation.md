@@ -34,6 +34,12 @@ Existe uma exceção de 10 segundos. Duas abas abertas no mesmo navegador podem 
 
 **Login.** Senhas com bcrypt, custo 12 (o enunciado pede no mínimo 10; 12 custa cerca de 250 ms por tentativa). Quando o email não existe, comparo a senha contra um hash fixo, para que a resposta demore o mesmo e o tempo não revele quais emails estão cadastrados. A rota de login aceita 10 tentativas por minuto por IP, além do limite global de 100.
 
+**Bloqueio por email.** O limite por IP não segura um ataque distribuído: mil máquinas com dez tentativas cada testam dez mil senhas contra o admin. Por isso também conto as falhas por email, venham de onde vierem. Dez falhas em 15 minutos bloqueiam aquele email até o fim da janela, inclusive para a senha certa; senão o atacante continuaria tentando e saberia quando acertou. Acertar a senha antes do limite zera o contador. O bloqueio vale para qualquer email, cadastrado ou não, então também não revela quais contas existem.
+
+**Auditoria.** Cada login falho vai para o log como `warn`, com email e IP; o início de um bloqueio e o reuso de refresh token também. Login bem-sucedido é registrado como `info` com o id do usuário. Senha e tokens nunca aparecem no log, o que um teste verifica.
+
+**Segredos.** Com `NODE_ENV=production`, a API se recusa a subir se `JWT_SECRET` ou `JWT_REFRESH_SECRET` forem os valores do `.env.example`. Eles estão publicados no repositório, e quem os usasse em produção permitiria a qualquer um forjar um token de admin.
+
 ### Por que não há token anti-CSRF
 
 O cookie só chega às rotas que o leem, e elas não executam nada que um atacante queira forjar:
@@ -65,5 +71,8 @@ Ele é validado no banco de qualquer jeito, então um valor aleatório opaco tam
 - Um access token não pode ser revogado antes de expirar: depois do logout, ou de uma troca de perfil, ele continua valendo por até 15 minutos. O prazo curto é a mitigação. Revogação imediata exigiria consultar o banco ou uma lista de bloqueio em toda requisição.
 - A tabela `refresh_tokens` ganha uma linha por renovação. O login apaga os tokens vencidos do próprio usuário; em produção, um job periódico faria a limpeza geral.
 - O cookie `Secure` exige HTTPS fora de `localhost` e `127.0.0.1`, que os navegadores já tratam como contexto seguro. Em produção haveria HTTPS de qualquer forma.
+- O bloqueio por email abre uma forma de negação de serviço: qualquer um pode bloquear a conta de outra pessoa por 15 minutos errando a senha dela de propósito. Aceitei o risco porque a alternativa, sem bloqueio, deixa a senha exposta a força bruta distribuída. Em produção eu acrescentaria CAPTCHA depois de algumas falhas e um aviso por email ao dono da conta, o que mantém a proteção sem entregar o bloqueio de graça.
+- O contador de falhas fica em memória, como o rate limit: vale por instância e zera quando a API reinicia. Com várias réplicas, os dois iriam para o Redis.
+- Os segredos de desenvolvimento do `docker-compose.yml` também são públicos e não são recusados, porque o enunciado exige que o projeto suba com um único comando, sem configuração. Ficam explicitamente marcados como valores de desenvolvimento.
 - O rate limit usa o IP do cliente. Atrás de um proxy, a API precisa saber em quantos saltos confiar (`TRUST_PROXY_HOPS`), senão todos os usuários dividiriam o limite do IP do proxy. No Docker esse valor é 1 (a nginx do front) e a porta 3001 só é publicada em `127.0.0.1`, para que ninguém na rede fale direto com a API forjando o `X-Forwarded-For`.
 - A garantia de "um token, uma sessão" depende do `FOR UPDATE`. O teste que a cobre só passou a detectar a remoção do lock depois que abri as conexões do pool antes das requisições simultâneas (ver "Dificuldades" no `DECISIONS.md`).

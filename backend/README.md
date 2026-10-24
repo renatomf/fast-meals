@@ -78,6 +78,8 @@ Para outro servidor, aponte `TEST_DATABASE_URL` para ele.
 | `GET /api/health`        | Status da API e do banco (200 ou 503)                                          |
 | `GET /api/docs`          | Swagger UI, gerado a partir dos schemas Zod                                    |
 
+Dez senhas erradas para o mesmo email em 15 minutos bloqueiam aquele email até o fim da janela, mesmo vindo de IPs diferentes ([ADR 0004](../docs/adr/0004-token-storage-and-rotation.md)). Reiniciar a API zera o contador.
+
 Credenciais do seed: `admin@fastmeals.com` / `Admin@123` e `viewer@fastmeals.com` / `Viewer@123`.
 
 O refresh token vem no corpo, como no `api-spec`, e também num cookie `httpOnly` restrito a `/api/auth`. O front usa só o cookie. O motivo e a defesa contra CSRF estão no [ADR 0004](../docs/adr/0004-token-storage-and-rotation.md).
