@@ -1,6 +1,4 @@
-import type { AssignmentResult } from "./assignment.ts";
-
-type Matrix = readonly (readonly number[])[];
+import { assertValidCostMatrix, type AssignmentResult, type CostMatrix } from "./assignment.ts";
 
 // Algoritmo Húngaro com potenciais (variante e-maxx / Jonker–Volgenant simplificada) para
 // matriz retangular n × m com n ≤ m. Cada linha entra uma vez; a busca do caminho mais
@@ -9,7 +7,7 @@ type Matrix = readonly (readonly number[])[];
 // u e v são os potenciais de linha e coluna: o custo reduzido a[i][j] - u[i] - v[j] nunca
 // fica negativo, e as atribuições feitas são sempre arestas de custo reduzido zero.
 // Arrays com índice 1: a coluna 0 é uma sentinela que marca "linha ainda sem coluna".
-function solveRowsAtMostColumns(cost: Matrix, rows: number, columns: number): number[] {
+function solveRowsAtMostColumns(cost: CostMatrix, rows: number, columns: number): number[] {
   const u = new Float64Array(rows + 1);
   const v = new Float64Array(columns + 1);
   const columnOwner = new Int32Array(columns + 1); // linha dona de cada coluna (0 = livre)
@@ -41,6 +39,11 @@ function solveRowsAtMostColumns(cost: Matrix, rows: number, columns: number): nu
           nextColumn = candidate;
         }
       }
+      // Com n ≤ m e custos finitos sempre há uma coluna livre alcançável. Se não houver, é
+      // bug: falha aqui em vez de repetir o laço para sempre e travar o processo.
+      if (!Number.isFinite(delta)) {
+        throw new Error("Hungarian: no reachable free column; cost matrix or invariants broken");
+      }
       for (let index = 0; index <= columns; index++) {
         if (visited[index]) {
           const indexOwner = columnOwner[index] ?? 0;
@@ -69,9 +72,8 @@ function solveRowsAtMostColumns(cost: Matrix, rows: number, columns: number): nu
   return rowToColumn;
 }
 
-export function hungarian(cost: Matrix): AssignmentResult {
-  const rows = cost.length;
-  const columns = cost[0]?.length ?? 0;
+export function hungarian(cost: CostMatrix): AssignmentResult {
+  const { rows, columns } = assertValidCostMatrix(cost);
   if (rows === 0 || columns === 0) {
     return { rowToColumn: new Array<null>(rows).fill(null), totalCost: 0 };
   }

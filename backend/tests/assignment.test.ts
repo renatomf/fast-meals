@@ -195,4 +195,40 @@ describe("greedy (baseline)", () => {
 
     expect(greedy(cost)).toEqual({ rowToColumn: [1, 0], totalCost: 2 });
   });
+
+  it("breaks a tie toward the lower column, so the same input gives the same answer", () => {
+    // As duas primeiras colunas empatam; só a ordem de desempate decide qual fica.
+    expect(greedy([[1, 1, 2]]).rowToColumn).toEqual([0]);
+    expect(greedy([[2], [2]]).rowToColumn).toEqual([0, null]);
+  });
+});
+
+describe("invalid cost matrices", () => {
+  // Antes da validação, uma matriz só de Infinity travava o Húngaro num laço infinito e
+  // linhas de tamanhos diferentes viravam custo zero sem aviso.
+  it.each([
+    ["rows of different lengths", [[1, 2, 3], [4]]],
+    [
+      "a NaN cost",
+      [
+        [Number.NaN, 1],
+        [2, 3],
+      ],
+    ],
+    [
+      "infinite costs",
+      [
+        [Infinity, Infinity],
+        [Infinity, Infinity],
+      ],
+    ],
+    ["a negative infinity", [[1, -Infinity]]],
+  ])("rejects %s in both algorithms", (_label, cost) => {
+    expect(() => hungarian(cost)).toThrow(RangeError);
+    expect(() => greedy(cost)).toThrow(RangeError);
+  });
+
+  it("still accepts orders with nobody to take them", () => {
+    expect(() => hungarian([[], []])).not.toThrow();
+  });
 });
