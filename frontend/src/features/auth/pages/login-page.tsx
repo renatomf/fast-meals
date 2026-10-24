@@ -6,7 +6,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useAuth } from "@/context/auth-context";
 import { Logo } from "@/design-system/brand/logo";
-import { ThemeToggle } from "@/design-system/components/theme-toggle";
 import { Button } from "@/design-system/ui/button";
 import { Input } from "@/design-system/ui/input";
 import { Label } from "@/design-system/ui/label";
@@ -61,10 +60,7 @@ export function LoginPage() {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <main className="flex flex-col px-6 py-6 sm:px-10">
-        <div className="flex items-center justify-between">
-          <Logo />
-          <ThemeToggle />
-        </div>
+        <Logo />
 
         <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-8 py-10">
           <div>
