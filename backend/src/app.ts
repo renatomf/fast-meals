@@ -38,6 +38,7 @@ import { createChangeHub, type ChangeFeed } from "./modules/realtime/change-feed
 import { realtimeRoutes } from "./modules/realtime/realtime.routes.ts";
 import { reportsRepository } from "./modules/reports/reports.repository.ts";
 import { reportsRoutes } from "./modules/reports/reports.routes.ts";
+import { createReportsCache } from "./modules/reports/reports-cache.ts";
 import { createReportsService } from "./modules/reports/reports.service.ts";
 import { createProductsService } from "./modules/products/products.service.ts";
 import { AppError } from "./utils/app-error.ts";
@@ -49,7 +50,8 @@ export type AppDependencies = {
   db: Database;
   checkDatabase: () => Promise<boolean>;
   // Avisos de mudança do banco (LISTEN/NOTIFY). Sem ele, o WebSocket aceita conexões mas
-  // nunca recebe nada: é o caso dos testes que não tratam de tempo real.
+  // nunca recebe nada, e os relatórios não usam cache: sem quem avise de uma mudança, o
+  // cache serviria dado velho. É o caso dos testes que não tratam de tempo real.
   changeFeed?: ChangeFeed;
   // Só nos testes: recebe as linhas de log para verificar os eventos de segurança.
   logStream?: LogStream;
@@ -74,13 +76,7 @@ function loggerOptions(env: Env, logStream?: LogStream): FastifyServerOptions["l
 
 // Composition root: todas as dependências entram por aqui, o que permite
 // montar a aplicação nos testes com fakes no lugar do banco.
-export async function buildApp({
-  env,
-  db,
-  checkDatabase,
-  changeFeed = createChangeHub(),
-  logStream,
-}: AppDependencies) {
+export async function buildApp({ env, db, checkDatabase, changeFeed, logStream }: AppDependencies) {
   const app = Fastify({
     logger: loggerOptions(env, logStream),
     requestIdHeader: "x-request-id",
@@ -154,11 +150,14 @@ export async function buildApp({
   const ordersService = createOrdersService({ db, repository: ordersRepository });
   const dispatchService = createDispatchService({ db, repository: dispatchRepository });
   const reportsService = createReportsService({ db, repository: reportsRepository });
+  const cachedReports = changeFeed
+    ? createReportsCache(reportsService, { changeFeed })
+    : reportsService;
 
   // Mensagens do cliente são só de autenticação: 4 KB sobram.
   await app.register(websocket, { options: { maxPayload: 4_096 } });
   await app.register(realtimeRoutes, {
-    changeFeed,
+    changeFeed: changeFeed ?? createChangeHub(),
     verifyAccessToken: authService.verifyAccessToken,
     allowedOrigin: env.CORS_ORIGIN,
   });
@@ -174,7 +173,7 @@ export async function buildApp({
       await api.register(productsRoutes, { productsService });
       await api.register(ordersRoutes, { ordersService });
       await api.register(dispatchRoutes, { dispatchService });
-      await api.register(reportsRoutes, { reportsService });
+      await api.register(reportsRoutes, { reportsService: cachedReports });
       if (env.DEMO_MODE) {
         const demoService = createDemoService({
           ordersService,
