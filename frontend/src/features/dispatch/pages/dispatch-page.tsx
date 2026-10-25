@@ -160,6 +160,7 @@ export function DispatchPage() {
   const optimizeButton = (
     <Button
       variant="brand"
+      className="w-full sm:w-auto"
       onClick={runOptimization}
       disabled={!canWrite || optimize.isPending || nothingToDo || (people?.length ?? 0) === 0}
     >
@@ -167,7 +168,12 @@ export function DispatchPage() {
     </Button>
   );
   const demoButton = (
-    <Button variant="secondary" onClick={createScenario} disabled={!canWrite || demo.isPending}>
+    <Button
+      variant="secondary"
+      className="w-full sm:w-auto"
+      onClick={createScenario}
+      disabled={!canWrite || demo.isPending}
+    >
       <FlaskConical /> Cenário de demonstração
     </Button>
   );
@@ -176,7 +182,7 @@ export function DispatchPage() {
       button
     ) : (
       <Tooltip content={READ_ONLY_MESSAGE}>
-        <span tabIndex={0} className="rounded-md">
+        <span tabIndex={0} className="flex rounded-md">
           {button}
         </span>
       </Tooltip>
@@ -200,7 +206,7 @@ export function DispatchPage() {
         title="Despacho"
         description="Pedidos prontos e entregadores livres. A sugestão minimiza a distância total."
         actions={
-          <div className="flex flex-wrap gap-2">
+          <div className="grid w-full gap-2 sm:flex sm:w-auto">
             {guarded(demoButton)}
             {guarded(optimizeButton)}
           </div>

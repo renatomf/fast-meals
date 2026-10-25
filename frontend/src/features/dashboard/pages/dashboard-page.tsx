@@ -69,7 +69,7 @@ export function DashboardPage() {
           <div
             role="radiogroup"
             aria-label="Período"
-            className="flex rounded-md border bg-background p-0.5"
+            className="flex w-full rounded-md border bg-background p-0.5 sm:w-auto"
           >
             {periods.map((option) => (
               <button
@@ -79,7 +79,7 @@ export function DashboardPage() {
                 aria-checked={period === option.value}
                 onClick={() => void navigate({ search: { period: option.value } })}
                 className={cn(
-                  "h-7 rounded-[5px] px-3 text-ui font-medium transition-colors duration-150",
+                  "h-7 flex-1 rounded-[5px] px-3 text-ui font-medium transition-colors duration-150 sm:flex-none",
                   period === option.value
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground",

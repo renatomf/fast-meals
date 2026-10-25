@@ -35,7 +35,7 @@ export function PeriodFilter({ range, onChange }: PeriodFilterProps) {
         role="radiogroup"
         aria-label="Período rápido"
         // Mesma altura dos campos de data (h-8) e alinhado pela base deles no desktop.
-        className="flex h-8 self-start rounded-md border bg-background p-0.5 sm:self-auto"
+        className="flex h-8 w-full rounded-md border bg-background p-0.5 sm:w-auto"
       >
         {options.map((option) => {
           const checked =
@@ -48,7 +48,7 @@ export function PeriodFilter({ range, onChange }: PeriodFilterProps) {
               aria-checked={checked}
               onClick={() => onChange(option.range)}
               className={cn(
-                "h-full rounded px-3 text-ui font-medium whitespace-nowrap transition-colors duration-150",
+                "h-full flex-1 rounded px-2 text-ui font-medium whitespace-nowrap transition-colors duration-150 sm:flex-none sm:px-3",
                 checked
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground",
@@ -59,7 +59,7 @@ export function PeriodFilter({ range, onChange }: PeriodFilterProps) {
           );
         })}
       </div>
-      <div className="flex gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:flex">
         <div className="flex flex-col gap-1">
           <Label htmlFor="report-start" className="text-xs text-muted-foreground">
             De
@@ -67,7 +67,7 @@ export function PeriodFilter({ range, onChange }: PeriodFilterProps) {
           <Input
             id="report-start"
             type="date"
-            className="h-8 w-40"
+            className="h-8 w-full sm:w-40"
             value={range.startDate}
             min={addDays(range.endDate, -(MAX_REPORT_DAYS - 1))}
             max={range.endDate}
@@ -83,7 +83,7 @@ export function PeriodFilter({ range, onChange }: PeriodFilterProps) {
           <Input
             id="report-end"
             type="date"
-            className="h-8 w-40"
+            className="h-8 w-full sm:w-40"
             value={range.endDate}
             min={range.startDate}
             max={today}

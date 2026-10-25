@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { Button } from "@/design-system/ui/button";
 import { Input } from "@/design-system/ui/input";
 import { Label } from "@/design-system/ui/label";
+import { HorizontalScroller } from "@/design-system/components/horizontal-scroller";
 import { cn } from "@/utils/cn";
 import type { OrdersSearch } from "../search-params";
 import { statusMeta } from "./status-badge";
@@ -23,34 +24,32 @@ export function OrderFilters({ search, onChange }: OrderFiltersProps) {
 
   return (
     <div className="flex flex-col gap-3 border-b px-4 py-3 lg:flex-row lg:items-end lg:justify-between">
-      <div
-        role="tablist"
-        aria-label="Filtrar por status"
-        className="-mx-1 flex gap-1 overflow-x-auto px-1"
-      >
-        {tabs.map((tab) => {
-          const selected = search.status === tab.value;
-          return (
-            <button
-              key={tab.label}
-              type="button"
-              role="tab"
-              aria-selected={selected}
-              onClick={() => onChange({ status: tab.value, page: undefined })}
-              className={cn(
-                "h-8 shrink-0 rounded-md px-3 text-ui font-medium whitespace-nowrap transition-colors duration-150",
-                selected
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
-              )}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
+      <HorizontalScroller className="-mx-1">
+        <div role="tablist" aria-label="Filtrar por status" className="flex w-max gap-1 px-1">
+          {tabs.map((tab) => {
+            const selected = search.status === tab.value;
+            return (
+              <button
+                key={tab.label}
+                type="button"
+                role="tab"
+                aria-selected={selected}
+                onClick={() => onChange({ status: tab.value, page: undefined })}
+                className={cn(
+                  "h-8 shrink-0 rounded-md px-3 text-ui font-medium whitespace-nowrap transition-colors duration-150",
+                  selected
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </HorizontalScroller>
 
-      <div className="flex flex-wrap items-end gap-2">
+      <div className="grid grid-cols-2 items-end gap-2 sm:flex sm:flex-wrap">
         <div className="flex flex-col gap-1">
           <Label htmlFor="startDate" className="text-xs text-muted-foreground">
             De
@@ -58,7 +57,7 @@ export function OrderFilters({ search, onChange }: OrderFiltersProps) {
           <Input
             id="startDate"
             type="date"
-            className="h-8 w-40"
+            className="h-8 w-full sm:w-40"
             value={search.startDate ?? ""}
             max={search.endDate}
             onChange={(event) =>
@@ -73,7 +72,7 @@ export function OrderFilters({ search, onChange }: OrderFiltersProps) {
           <Input
             id="endDate"
             type="date"
-            className="h-8 w-40"
+            className="h-8 w-full sm:w-40"
             value={search.endDate ?? ""}
             min={search.startDate}
             onChange={(event) =>
@@ -84,6 +83,7 @@ export function OrderFilters({ search, onChange }: OrderFiltersProps) {
         {hasDates && (
           <Button
             variant="ghost"
+            className="col-span-2 sm:col-span-1"
             onClick={() => onChange({ startDate: undefined, endDate: undefined, page: undefined })}
           >
             <X /> Limpar datas

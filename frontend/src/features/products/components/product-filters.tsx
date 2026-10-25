@@ -101,13 +101,13 @@ export function ProductFilters({ search, onChange }: ProductFiltersProps) {
             <option value="unavailable">Indisponíveis</option>
           </NativeSelect>
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="col-span-2 flex flex-col gap-1 sm:col-span-1">
           <Label htmlFor="product-sort" className="text-xs text-muted-foreground">
             Ordenar por
           </Label>
           <NativeSelect
             id="product-sort"
-            className="h-8 lg:w-40"
+            className="h-8 w-full lg:w-40"
             value={sort}
             onChange={(event) => {
               const [sortBy, sortOrder] = event.target.value.split(":") as [

@@ -13,7 +13,7 @@ export function Pagination({ page, totalPages, total, onPageChange }: Pagination
   return (
     <nav
       aria-label="Paginação"
-      className="flex items-center justify-between gap-4 px-4 py-3 text-ui"
+      className="flex items-center justify-between gap-2 px-4 py-3 text-xs sm:gap-4 sm:text-ui"
     >
       <span className="text-muted-foreground tabular-nums">
         {formatInteger(total)} {total === 1 ? "resultado" : "resultados"}

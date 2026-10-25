@@ -148,9 +148,9 @@ export function AppShell() {
 
           {user && (
             <div className="mt-auto flex flex-col gap-3 border-t px-2.5 pt-4">
-              <div className="flex min-w-0 flex-col gap-1.5">
+              <div className="flex min-w-0 items-center justify-between gap-2">
                 <span className="truncate text-ui font-medium">{user.email}</span>
-                <span>{roleBadge}</span>
+                {roleBadge}
               </div>
               <div className="flex items-center justify-between gap-2">
                 <span className="text-ui text-muted-foreground">Tema</span>

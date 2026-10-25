@@ -11,6 +11,7 @@ import { Card } from "@/design-system/ui/card";
 import { Tooltip } from "@/design-system/ui/tooltip";
 import { READ_ONLY_MESSAGE, useCan } from "@/hooks/use-can";
 import { ApiError } from "@/services/api-client";
+import { HorizontalScroller } from "@/design-system/components/horizontal-scroller";
 import { cn } from "@/utils/cn";
 import { DeliveryPersonFormSheet } from "../components/delivery-person-form-sheet";
 import { DeliveryPersonsTable } from "../components/delivery-persons-table";
@@ -86,32 +87,30 @@ export function DeliveryPersonsPage() {
       />
 
       <Card className="overflow-hidden">
-        <div
-          role="tablist"
-          aria-label="Filtrar entregadores"
-          className="flex gap-1 overflow-x-auto border-b px-4 py-3"
-        >
-          {tabs.map((tab) => {
-            const selected = search.filter === tab.value;
-            return (
-              <button
-                key={tab.label}
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                onClick={() => void navigate({ search: { filter: tab.value } })}
-                className={cn(
-                  "h-8 shrink-0 rounded-md px-3 text-ui font-medium transition-colors duration-150",
-                  selected
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                )}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+        <HorizontalScroller className="border-b px-4 py-3">
+          <div role="tablist" aria-label="Filtrar entregadores" className="flex w-max gap-1">
+            {tabs.map((tab) => {
+              const selected = search.filter === tab.value;
+              return (
+                <button
+                  key={tab.label}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onClick={() => void navigate({ search: { filter: tab.value } })}
+                  className={cn(
+                    "h-8 shrink-0 rounded-md px-3 text-ui font-medium transition-colors duration-150",
+                    selected
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  )}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </HorizontalScroller>
         {people.isError ? (
           <ErrorState message={people.error.message} onRetry={() => void people.refetch()} />
         ) : (
