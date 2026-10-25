@@ -43,6 +43,13 @@
       "when": 1792868856031,
       "tag": "0005_sortable_created_at_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792889903843,
+      "tag": "0006_change_notifications",
+      "breakpoints": true
     }
   ]
 }

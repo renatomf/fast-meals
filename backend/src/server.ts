@@ -2,6 +2,7 @@ import { buildApp } from "./app.ts";
 import { loadEnv, type Env } from "./config/env.ts";
 import { createDatabase } from "./db/client.ts";
 import { apiDatabaseLimits, createPool, pingDatabase } from "./db/pool.ts";
+import { createPostgresChangeFeed } from "./modules/realtime/change-feed.ts";
 
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 
@@ -14,11 +15,14 @@ try {
 }
 
 const pool = createPool(env.DATABASE_URL, apiDatabaseLimits);
+const changeFeed = createPostgresChangeFeed(env.DATABASE_URL);
 const app = await buildApp({
   env,
   db: createDatabase(pool),
   checkDatabase: () => pingDatabase(pool),
+  changeFeed,
 });
+await changeFeed.start(app.log);
 
 async function shutdown(signal: NodeJS.Signals) {
   app.log.info({ signal }, "shutting down");
@@ -26,6 +30,7 @@ async function shutdown(signal: NodeJS.Signals) {
   setTimeout(() => process.exit(1), SHUTDOWN_TIMEOUT_MS).unref();
 
   await app.close();
+  await changeFeed.stop();
   await pool.end();
   process.exit(0);
 }

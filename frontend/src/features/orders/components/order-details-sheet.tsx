@@ -12,12 +12,11 @@ import {
   SheetTitle,
 } from "@/design-system/ui/sheet";
 import { Skeleton } from "@/design-system/ui/skeleton";
+import { vehicleLabels } from "@/utils/labels";
 import { useOrder, useOrderHistory } from "../hooks/use-orders";
 import { OrderActions } from "./order-actions";
 import { OrderTimeline } from "./order-timeline";
 import { StatusBadge } from "./status-badge";
-
-const vehicleLabels = { bicycle: "Bicicleta", motorcycle: "Moto", car: "Carro" } as const;
 
 type OrderDetailsSheetProps = { orderId: string | undefined; onClose: () => void };
 

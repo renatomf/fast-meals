@@ -54,3 +54,12 @@ export function formatMinutes(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   return `${hours} h ${Math.round(minutes % 60)} min`;
 }
+
+// Máscara progressiva do telefone celular, no formato que a API exige: (XX) XXXXX-XXXX.
+export function formatPhoneInput(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length === 0) return "";
+  if (digits.length <= 2) return `(${digits}`;
+  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}

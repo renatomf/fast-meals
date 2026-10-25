@@ -12,7 +12,8 @@ export async function signIn(page: Page, role: keyof typeof accounts, path = "/"
   await page.getByLabel("Email").fill(accounts[role].email);
   await page.getByLabel("Senha").fill(accounts[role].password);
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Sair" })).toBeVisible();
+  // A busca está no cabeçalho em qualquer largura; o "Sair" no celular fica dentro do menu.
+  await expect(page.getByRole("button", { name: /^Buscar/ }).first()).toBeVisible();
 }
 
 // Nome único por execução: os testes criam os próprios pedidos e não dependem do seed.

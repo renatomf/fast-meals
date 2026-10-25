@@ -69,7 +69,7 @@ export function DashboardPage() {
           <div
             role="radiogroup"
             aria-label="Período"
-            className="flex rounded-md border bg-background p-0.5"
+            className="flex w-full rounded-md border bg-background p-0.5 sm:w-auto"
           >
             {periods.map((option) => (
               <button
@@ -79,7 +79,7 @@ export function DashboardPage() {
                 aria-checked={period === option.value}
                 onClick={() => void navigate({ search: { period: option.value } })}
                 className={cn(
-                  "h-7 rounded-[5px] px-3 text-ui font-medium transition-colors duration-150",
+                  "h-7 flex-1 rounded-[5px] px-3 text-ui font-medium transition-colors duration-150 sm:flex-none",
                   period === option.value
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground",
@@ -92,7 +92,7 @@ export function DashboardPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           label="Receita"
           value={revenue.data && formatMoney(revenue.data.totalRevenue)}
@@ -128,7 +128,7 @@ export function DashboardPage() {
         />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader>
             <div>

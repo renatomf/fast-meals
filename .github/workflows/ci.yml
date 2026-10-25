@@ -76,6 +76,8 @@ jobs:
           persist-credentials: false
       # O mesmo comando que o avaliador vai rodar.
       - run: docker compose up --build --detach --wait
+        env:
+          RATE_LIMIT_MAX: 1000
       - name: Front and API answer through nginx
         run: |
           curl --fail --silent http://localhost:3000/ | grep -q "<title>FastMeals</title>"

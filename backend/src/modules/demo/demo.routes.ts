@@ -19,7 +19,7 @@ export const demoRoutes: FastifyPluginAsyncZod<DemoRoutesOptions> = async (
   app.post(
     "/dispatch/demo-scenario",
     {
-      preHandler: authorize("admin"),
+      preValidation: authorize("admin"),
       schema: {
         tags: ["dispatch"],
         summary: "Cria um cenário em que o guloso perde do Húngaro (admin, só com DEMO_MODE)",

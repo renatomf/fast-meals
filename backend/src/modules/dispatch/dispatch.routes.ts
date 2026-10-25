@@ -22,7 +22,7 @@ export const dispatchRoutes: FastifyPluginAsyncZod<DispatchRoutesOptions> = asyn
   app.post(
     "/orders/optimize-assignment",
     {
-      preHandler: authorize("admin"),
+      preValidation: authorize("admin"),
       schema: {
         tags: ["dispatch"],
         summary: "Sugere a atribuição de entregadores que minimiza a distância total (admin)",

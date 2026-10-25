@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -99,7 +99,13 @@ describe("login flow", () => {
 
     await user.click(await screen.findByRole("button", { name: "Entrar como admin" }));
 
-    expect(await screen.findByRole("heading", { name: "Visão geral" })).toBeInTheDocument();
-    expect(window.location.origin + window.location.pathname).toBe(`${window.location.origin}/`);
+    // O que importa é para onde o login levou: a raiz do próprio painel, com o shell na
+    // tela. Não espera a página do dashboard, que vem sob demanda com o Recharts e, com a
+    // máquina ocupada, levava dezenas de segundos para a primeira transformação do Vite.
+    await waitFor(() => expect(window.location.pathname).toBe("/"));
+    expect(window.location.origin).toBe("http://localhost:3000");
+    expect(
+      await screen.findByRole("navigation", { name: "Navegação principal" }),
+    ).toBeInTheDocument();
   });
 });

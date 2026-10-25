@@ -39,14 +39,18 @@ export function AuthProvider({ children, onSignOut }: AuthProviderProps) {
   // de refresh, se ainda for válido, devolve a sessão sem pedir a senha de novo.
   useEffect(() => {
     let active = true;
-    void refreshSession().then((session) => {
-      if (!active) return;
-      setState(
-        session
-          ? { status: "authenticated", user: session.user }
-          : { status: "anonymous", expired: false },
-      );
-    });
+    void refreshSession()
+      // Sem como renovar agora (servidor fora, por exemplo): segue para o login, que mostra
+      // o erro de verdade se a API continuar indisponível.
+      .catch(() => null)
+      .then((session) => {
+        if (!active) return;
+        setState(
+          session
+            ? { status: "authenticated", user: session.user }
+            : { status: "anonymous", expired: false },
+        );
+      });
     return () => {
       active = false;
     };

@@ -19,3 +19,7 @@ export function Input({ className, type = "text", ...props }: ComponentProps<"in
 export function NativeSelect({ className, ...props }: ComponentProps<"select">) {
   return <select className={cn(fieldClasses, "pr-8", className)} {...props} />;
 }
+
+export function Textarea({ className, ...props }: ComponentProps<"textarea">) {
+  return <textarea className={cn(fieldClasses, "h-auto min-h-20 py-2", className)} {...props} />;
+}

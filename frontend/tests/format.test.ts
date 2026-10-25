@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { formatMinutes, formatMoney, formatRelative, formatShortDate } from "@/utils/format";
+import {
+  formatMinutes,
+  formatMoney,
+  formatPhoneInput,
+  formatRelative,
+  formatShortDate,
+} from "@/utils/format";
 
 // O Intl separa "R$" do valor com espaço não separável (U+00A0).
 const nbsp = " ";
@@ -26,5 +32,16 @@ describe("format", () => {
   it("formats durations in minutes and hours", () => {
     expect(formatMinutes(42.5)).toBe("42,5 min");
     expect(formatMinutes(95)).toBe("1 h 35 min");
+  });
+
+  it.each([
+    ["", ""],
+    ["1", "(1"],
+    ["11987", "(11) 987"],
+    ["11987654321", "(11) 98765-4321"],
+    ["(11) 98765-43219999", "(11) 98765-4321"],
+    ["abc11x98765", "(11) 98765"],
+  ])("masks the phone %j as %j", (typed, masked) => {
+    expect(formatPhoneInput(typed)).toBe(masked);
   });
 });

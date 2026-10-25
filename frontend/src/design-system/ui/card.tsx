@@ -14,7 +14,11 @@ export function Card({ className, ...props }: ComponentProps<"section">) {
 export function CardHeader({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
-      className={cn("flex items-start justify-between gap-4 border-b px-5 py-4", className)}
+      // Título e descrição empilham no celular; lado a lado só quando há espaço.
+      className={cn(
+        "flex flex-col gap-1 border-b px-5 py-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4",
+        className,
+      )}
       {...props}
     />
   );

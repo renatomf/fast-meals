@@ -68,4 +68,4 @@ Com os índices de `created_at` trocados por `(created_at, id)` ascendente, que 
 Ficaram de fora, conscientemente:
 
 - **Ordenação por total.** É rara no painel e custa 3 ms com 10 mil pedidos. Um índice em `total_amount` só se pagaria com volume muito maior.
-- **Paginação profunda.** Com offset de 9.000, o PostgreSQL prefere ler a tabela a percorrer o índice, e está certo para esse tamanho. Em escala, a saída seria paginação por cursor (`created_at, id` da última linha), registrada no ADR 0006.
+- **Paginação profunda.** Com offset de 9.000, o PostgreSQL prefere ler a tabela a percorrer o índice, e está certo para esse tamanho. Em escala, a saída seria paginação por cursor (`created_at, id` da última linha), registrada no [ADR 0006](adr/0006-scaling-path.md).

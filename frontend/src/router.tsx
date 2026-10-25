@@ -11,8 +11,12 @@ import { z } from "zod";
 import type { AuthState } from "@/context/auth-context";
 import { LoginPage } from "@/features/auth";
 import { dashboardSearchSchema, loadDashboardPage } from "@/features/dashboard";
+import { deliveryPersonsSearchSchema, loadDeliveryPersonsPage } from "@/features/delivery-persons";
+import { loadDispatchPage } from "@/features/dispatch";
 import { loadOrdersPage, ordersSearchSchema } from "@/features/orders";
-import { AppShell, ComingSoonPage, NotFoundPage, RouteError } from "@/features/shell";
+import { loadProductsPage, productsSearchSchema } from "@/features/products";
+import { loadReportsPage, reportsSearchSchema } from "@/features/reports";
+import { AppShell, NotFoundPage, RouteError } from "@/features/shell";
 import { safeRedirect } from "@/utils/safe-redirect";
 
 export type RouterContext = { auth: AuthState; queryClient: QueryClient };
@@ -73,12 +77,32 @@ const ordersRoute = createRoute({
 });
 
 // Genérico para manter o path literal: assim o <Link to="/dispatch"> continua tipado.
-const comingSoon = <TPath extends string>(path: TPath, title: string) =>
-  createRoute({
-    getParentRoute: () => appRoute,
-    path,
-    component: () => <ComingSoonPage title={title} />,
-  });
+const dispatchRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/dispatch",
+  component: lazyRouteComponent(loadDispatchPage, "DispatchPage"),
+});
+
+const productsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/products",
+  validateSearch: productsSearchSchema,
+  component: lazyRouteComponent(loadProductsPage, "ProductsPage"),
+});
+
+const deliveryPersonsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/delivery-persons",
+  validateSearch: deliveryPersonsSearchSchema,
+  component: lazyRouteComponent(loadDeliveryPersonsPage, "DeliveryPersonsPage"),
+});
+
+const reportsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/reports",
+  validateSearch: reportsSearchSchema,
+  component: lazyRouteComponent(loadReportsPage, "ReportsPage"),
+});
 
 // Endereço desconhecido também passa pelo login e mostra o 404 dentro do shell, com a navegação.
 const notFoundRoute = createRoute({
@@ -92,10 +116,10 @@ const routeTree = rootRoute.addChildren([
   appRoute.addChildren([
     dashboardRoute,
     ordersRoute,
-    comingSoon("/dispatch", "Despacho"),
-    comingSoon("/products", "Cardápio"),
-    comingSoon("/delivery-persons", "Entregadores"),
-    comingSoon("/reports", "Relatórios"),
+    dispatchRoute,
+    productsRoute,
+    deliveryPersonsRoute,
+    reportsRoute,
     notFoundRoute,
   ]),
 ]);

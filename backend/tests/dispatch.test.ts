@@ -178,6 +178,23 @@ describe("POST /api/orders/optimize-assignment: caso com solução", () => {
     expect(involvedOrders).not.toContain(assignedOrder?.id);
   });
 
+  // "Entregadores ativos e sem pedido em andamento" (seção 6 do enunciado): inativo fica de
+  // fora, e quem está em entrega também.
+  it("ignores inactive people and people already out for delivery", async () => {
+    const [inactive, delivering] = await availablePeople();
+    const [order] = await readyOrders();
+    await admin.put(`/delivery-persons/${inactive?.id}`, { isActive: false });
+    await admin.patch(`/orders/${order?.id}/assign`, { deliveryPersonId: delivering?.id });
+    await admin.patch(`/orders/${order?.id}/status`, { status: "delivering" });
+
+    const body = (await optimize()).json<OptimizeAssignmentResponse>();
+
+    const involvedPeople = body.assignments.map((item) => item.deliveryPersonId);
+    expect(involvedPeople).not.toContain(inactive?.id);
+    expect(involvedPeople).not.toContain(delivering?.id);
+    expect(body.assignments.length).toBeGreaterThan(0);
+  });
+
   it("only suggests: nothing is assigned until someone accepts", async () => {
     await optimize();
 
