@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { expectNoSeriousA11yViolations, signIn } from "./support.ts";
+import { expectNoSeriousA11yViolations, firstDataRow, signIn } from "./support.ts";
 
 const themes = ["light", "dark"] as const;
 
@@ -11,6 +11,8 @@ async function useTheme(page: Page, theme: (typeof themes)[number]) {
 }
 
 test("login, dashboard and orders have no serious violations in both themes", async ({ page }) => {
+  // Percorre todas as telas duas vezes: contra um deploy, a latência real passa dos 30 s.
+  test.setTimeout(120_000);
   await page.goto("/login");
   for (const theme of themes) {
     await useTheme(page, theme);
@@ -29,13 +31,14 @@ test("login, dashboard and orders have no serious violations in both themes", as
       await expectNoSeriousA11yViolations(page);
 
       await page.getByRole("link", { name: "Pedidos" }).click();
-      await expect(page.getByRole("row").nth(1)).toBeVisible();
+      await expect(firstDataRow(page)).toBeVisible();
       await expectNoSeriousA11yViolations(page);
 
-      await page.getByRole("row").nth(1).click();
+      await firstDataRow(page).click();
       await expect(page.getByRole("dialog")).toBeVisible();
       await expectNoSeriousA11yViolations(page);
       await page.keyboard.press("Escape");
+      await expect(page.getByRole("dialog")).toBeHidden();
 
       await page.getByRole("link", { name: "Cardápio" }).click();
       await expect(page.getByRole("switch").first()).toBeVisible();
@@ -49,7 +52,7 @@ test("login, dashboard and orders have no serious violations in both themes", as
       await page.keyboard.press("Escape");
 
       await page.getByRole("link", { name: "Entregadores" }).click();
-      await expect(page.getByRole("row").nth(1)).toBeVisible();
+      await expect(firstDataRow(page)).toBeVisible();
       await expectNoSeriousA11yViolations(page);
 
       await page.getByRole("link", { name: "Relatórios" }).click();
@@ -97,7 +100,7 @@ test("the main flow works with the keyboard alone", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Pedidos" })).toBeVisible();
 
   // Abre um pedido pelo teclado e fecha com Esc; o foco volta para a página.
-  await page.getByRole("row").nth(1).focus();
+  await firstDataRow(page).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.keyboard.press("Escape");

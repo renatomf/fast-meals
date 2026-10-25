@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signIn, uniqueCustomer } from "./support.ts";
+import { firstDataRow, signIn, uniqueCustomer } from "./support.ts";
 
 // Uma página por suíte, num login só: o limite de login é por IP, e o refresh token
 // rotaciona a cada uso, então não dá para reaproveitar um cookie salvo entre testes.
@@ -104,7 +104,7 @@ test.describe("viewer", () => {
     await expect(page.getByText("Somente leitura")).toBeVisible();
     await expect(page.getByRole("button", { name: "Novo pedido" })).toBeDisabled();
 
-    await page.getByRole("row").nth(1).click();
+    await firstDataRow(page).click();
     const details = page.getByRole("dialog");
     await expect(details.getByRole("button", { name: "Iniciar preparo" })).toBeDisabled();
     await expect(details.getByRole("button", { name: "Cancelar pedido" })).toBeDisabled();

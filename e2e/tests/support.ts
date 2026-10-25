@@ -50,3 +50,13 @@ export async function expectNoSeriousA11yViolations(page: Page) {
     }));
   expect(serious).toEqual([]);
 }
+
+// Primeira linha com dados de verdade (todas têm um telefone). Enquanto a lista carrega, a
+// tabela mostra linhas de esqueleto; com a latência de um deploy, um nth(1) pegaria uma
+// delas e o clique ou o foco se perderiam quando os dados chegassem.
+export function firstDataRow(page: Page) {
+  return page
+    .getByRole("row")
+    .filter({ hasText: /\(\d{2}\) \d/ })
+    .first();
+}
