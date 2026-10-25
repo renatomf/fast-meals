@@ -34,7 +34,8 @@ export function PeriodFilter({ range, onChange }: PeriodFilterProps) {
       <div
         role="radiogroup"
         aria-label="Período rápido"
-        className="flex self-start rounded-md border bg-background p-0.5"
+        // Mesma altura dos campos de data (h-8) e alinhado pela base deles no desktop.
+        className="flex h-8 self-start rounded-md border bg-background p-0.5 sm:self-auto"
       >
         {options.map((option) => {
           const checked =
@@ -47,7 +48,7 @@ export function PeriodFilter({ range, onChange }: PeriodFilterProps) {
               aria-checked={checked}
               onClick={() => onChange(option.range)}
               className={cn(
-                "h-7 rounded px-3 text-ui font-medium whitespace-nowrap transition-colors duration-150",
+                "h-full rounded px-3 text-ui font-medium whitespace-nowrap transition-colors duration-150",
                 checked
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground",
