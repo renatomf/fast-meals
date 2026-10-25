@@ -52,6 +52,7 @@ npm run simulate   # com a API no ar: cria pedidos e avança a cozinha pela API,
 | `npm run seed`             | Aplica as migrations pendentes e carrega o `seed/data.json`. Num banco que já tem dados, não faz nada |
 | `npm run seed -- --reset`  | Apaga tudo e carrega de novo. Os números se repetem a cada execução (gerador de semente fixa)         |
 | `npm run seed:load`        | Acrescenta 10 mil pedidos encerrados nos últimos 90 dias, para os benchmarks de listagem e relatórios |
+| `npm run demo:refresh`     | Traz o histórico de pedidos para perto de hoje, em dias inteiros. Só precisa do `DATABASE_URL`        |
 | `npm run bench:assignment` | Tempo do Húngaro e do guloso em 50 × 30, 200 × 200 e 500 × 500                                        |
 | `npm run bench:listings`   | Tempo das listagens e relatórios (rode `seed:load` antes)                                             |
 | `npm run db:generate`      | Gera uma migration a partir das mudanças em `src/models` (`drizzle-kit`)                              |

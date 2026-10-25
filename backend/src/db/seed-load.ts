@@ -121,7 +121,7 @@ async function generateLoad(): Promise<number> {
         })),
         deliveryPerson: status === "delivered" ? random.pick(fleet) : null,
       },
-      { now, daysAgo: random.int(2, HISTORY_DAYS), changedBy: admin.id },
+      { now, daysAgo: random.int(1, HISTORY_DAYS), changedBy: admin.id },
     );
   });
 

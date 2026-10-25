@@ -484,7 +484,9 @@ describe("login lockout per email", () => {
     });
   });
 
-  it("forgets earlier failures after a successful login", async () => {
+  // São 20 logins, cada um com uma comparação bcrypt (lenta de propósito): perto dos 5 s
+  // padrão numa máquina mais lenta, então o limite deste teste é maior.
+  it("forgets earlier failures after a successful login", { timeout: 20_000 }, async () => {
     for (let i = 0; i < 9; i++) await loginFrom(wrongPassword);
     expect((await loginFrom(ADMIN)).statusCode).toBe(200);
     for (let i = 0; i < 9; i++) await loginFrom(wrongPassword);

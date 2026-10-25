@@ -277,6 +277,7 @@ A demo em https://fastmeals.onrender.com roda exatamente assim. O [`render.yaml`
    - `fastmeals-api` → `DATABASE_URL` (a do passo 1) e `CORS_ORIGIN` (URL do front);
    - `fastmeals` → `API_UPSTREAM` (URL da API).
 4. **Volume para os relatórios (opcional):** `npm run seed:load` em `backend/` com o `DATABASE_URL` do Neon.
+5. **Demo sempre atual:** no GitHub, em Settings → Secrets and variables → Actions, crie o segredo `DEMO_DATABASE_URL` com a mesma connection string. O workflow [`demo-refresh.yml`](.github/workflows/demo-refresh.yml) roda todo dia às 3h e traz o histórico de pedidos para perto de hoje; sem ele, os gráficos ganhariam um dia vazio no fim a cada dia.
 
 A API aplica as migrations e o seed ao subir. No plano gratuito, os serviços dormem sem uso e o primeiro acesso leva cerca de um minuto.
 
