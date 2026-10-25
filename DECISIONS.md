@@ -8,6 +8,7 @@ Este documento registra o que escolhi, por que escolhi e o que deu errado no cam
 - [ADR 0002 — Algoritmo Húngaro para a atribuição de entregadores](docs/adr/0002-hungarian-assignment.md)
 - [ADR 0003 — Integridade e concorrência garantidas pelo banco](docs/adr/0003-database-integrity-and-concurrency.md)
 - [ADR 0004 — Access token em memória, refresh token em cookie httpOnly com rotação](docs/adr/0004-token-storage-and-rotation.md)
+- [ADR 0005 — Atualização em tempo real por LISTEN/NOTIFY e WebSocket](docs/adr/0005-real-time-updates.md)
 
 Resumo: `backend/`, `frontend/` e `packages/contracts/` num monorepo com npm workspaces. Os schemas Zod do pacote de contratos validam a API, geram o Swagger e validam os formulários do front. As fronteiras entre camadas são regras de lint, não convenção.
 
@@ -43,6 +44,8 @@ Resumo: `backend/`, `frontend/` e `packages/contracts/` num monorepo com npm wor
 | React Hook Form + `@hookform/resolvers`  | Formulários                                     | Usa os mesmos schemas Zod de `packages/contracts` que validam a API: front e back não divergem nas mensagens nem nas regras                                                                                                                                                                                                                                        |
 | Recharts                                 | Gráficos                                        | Componentes React declarativos, cores dos tokens via variáveis CSS. Carregado só quando o dashboard abre                                                                                                                                                                                                                                                           |
 | Sonner                                   | Avisos                                          | Toasts acessíveis, com tema claro/escuro                                                                                                                                                                                                                                                                                                                           |
+| `@fastify/websocket`                     | Tempo real                                      | Plugin oficial sobre o `ws`; o pub/sub vem do próprio PostgreSQL (LISTEN/NOTIFY), sem outro serviço no compose ([ADR 0005](docs/adr/0005-real-time-updates.md))                                                                                                                                                                                                    |
+| Leaflet + react-leaflet                  | Mapa do despacho                                | Sem chave de API, tiles do OpenStreetMap. Carregado só quando o despacho abre                                                                                                                                                                                                                                                                                      |
 | Playwright + `@axe-core/playwright`      | Testes E2E e acessibilidade                     | Navegador de verdade contra o mesmo `docker compose` do avaliador. O axe aplica as regras WCAG 2.1 A e AA em cada tela, nos dois temas                                                                                                                                                                                                                             |
 | Testing Library + MSW                    | Testes do front                                 | Testa pelo que o usuário vê (papéis e rótulos). O MSW simula a rede, então os testes de integração usam o app inteiro, com roteador e providers reais                                                                                                                                                                                                              |
 
@@ -150,6 +153,8 @@ Migrations e seeds usam um pool sem esses limites, porque um `CREATE INDEX` numa
 - **Redirecionamento seguro.** Depois do login, o usuário volta para a página que pediu, mas só se o destino for um caminho do próprio app. `//evil.com` e `/\evil.com` voltam para o início.
 - **Permissões na tela.** O viewer vê as ações desabilitadas, com o motivo no tooltip, em vez de clicar e receber 403. O backend continua sendo a barreira real.
 - **Sem TanStack Table.** Paginação, filtros e ordenação acontecem no servidor; uma biblioteca de tabela resolveria no cliente o que já está resolvido na API. A `DataTable` do design system é genérica e tem menos de 100 linhas.
+- **Paleta Ctrl+K sem biblioteca.** Navegação, filas, tema e busca de produtos num combobox ARIA de cerca de 250 linhas, sobre o `Dialog` do design system. O `cmdk` traria outra cópia dos primitivos do Radix para uma lista curta.
+- **Mapa neutro.** Os tiles do OpenStreetMap ficam em tons de cinza (e invertidos no tema escuro), para que as únicas cores do mapa sejam pedidos, entregadores e rotas.
 - **Carga sob demanda.** Dashboard e pedidos são carregados quando a rota abre. O bundle inicial caiu de 999 kB para 404 kB (129 kB com gzip), e o Recharts só chega com o dashboard.
 
 ### Testes E2E
@@ -199,6 +204,16 @@ No mesmo trabalho reescrevi o Húngaro sobre um array plano, esperando ganhar ve
 - **Pedidos só abriam com o mouse.** As linhas da tabela tinham `onClick` e nada mais; pelo teclado não havia como abrir um pedido no desktop. A linha clicável agora recebe foco e abre com Enter ou Espaço.
 
 Um quinto ajuste veio do teste de rota inexistente: o 404 aparecia fora do shell e sem passar pelo login. Uma rota coringa dentro da área autenticada resolveu os dois.
+
+**Um F5 com o limite de requisições estourado deslogava o usuário.** Com as telas novas, a suíte E2E passou de 100 requisições por minuto, o limite geral por IP, e um teste começou a cair no login depois de um F5. O refresh recebia 429, e o front tratava qualquer resposta diferente de 200 como "sem sessão". Um usuário real que batesse no limite perderia uma sessão válida. Agora só um 401 encerra a sessão: um 429 espera o `Retry-After` e tenta de novo, e outras falhas viram erro em vez de logout. O ambiente do E2E sobe com um limite geral maior, configurável no compose; os limites de login não mudam.
+
+**O mapa ignorava as cores.** Todos os marcadores saíam no azul padrão do Leaflet, e as rotas não tinham o tracejado. O react-leaflet aplica `pathOptions` com `setStyle`, e o Leaflet só lê `className` na criação do traço. A classe passou a ir como prop do componente.
+
+**O `injectWS` não chegava à rota.** Os testes do WebSocket recebiam 500 antes de qualquer código meu rodar. Com um servidor e um cliente `ws` reais, a conexão abria normalmente: o socket simulado do `injectWS` não tem endereço, e o rate limit, que conta por IP, recusava a conexão. Os testes passaram a usar um servidor de verdade numa porta livre, o que também os deixa mais fiéis.
+
+**O axe achou o que eu não via.** Nas telas novas: a tabela de distâncias rolava, mas não recebia foco, então ninguém de teclado a percorria; o `<dl>` do resumo tinha níveis de `div` que leitores de tela não entendem; e a rosca de pedidos por status, escondida com `aria-hidden`, ainda recebia foco, porque o Recharts 3 torna o gráfico focável por padrão.
+
+**O ranking contava duas histórias.** A API ordena os produtos por unidades vendidas, mas as barras mediam receita: o segundo colocado aparecia com a barra maior que o primeiro. As barras passaram a medir unidades, e a receita fica como dado secundário.
 
 ## Uso de IA
 

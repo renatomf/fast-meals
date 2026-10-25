@@ -57,12 +57,17 @@ O verde da marca (`#06C167`) aparece no logo, no item ativo da navegação, no f
 
 ## Rotas e sessão
 
-| Rota                                                      | Tela                                                                                                                       |
-| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `/login`                                                  | Login, com contas de demonstração                                                                                          |
-| `/`                                                       | Visão geral: métricas do período contra o período anterior, receita diária, pedidos por status e pedidos que pedem atenção |
-| `/orders`                                                 | Pedidos: filtros, paginação, detalhes com histórico, ações de status e novo pedido                                         |
-| `/dispatch`, `/products`, `/delivery-persons`, `/reports` | Telas do dia 6                                                                                                             |
+| Rota                | Tela                                                                                                                       |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `/login`            | Login, com contas de demonstração                                                                                          |
+| `/`                 | Visão geral: métricas do período contra o período anterior, receita diária, pedidos por status e pedidos que pedem atenção |
+| `/orders`           | Pedidos: filtros, paginação, detalhes com histórico, ações de status e novo pedido                                         |
+| `/dispatch`         | Despacho: mapa, sugestão do Húngaro comparada ao guloso, matriz de distâncias, aceitar e rejeitar                          |
+| `/products`         | Cardápio: busca, filtros, disponibilidade, cadastro e edição                                                               |
+| `/delivery-persons` | Entregadores: situação, localização, cadastro e edição                                                                     |
+| `/reports`          | Relatórios: período, métricas e gráficos                                                                                   |
+
+Ctrl+K (⌘K no Mac) abre a paleta de comandos de qualquer tela. O cabeçalho mostra se o painel está ao vivo: as telas atualizam sozinhas pelo WebSocket e, sem ele, recarregam a cada 30 s ([ADR 0005](../docs/adr/0005-real-time-updates.md)).
 
 Rotas fora do login exigem sessão; quem chega sem ela vai para o login e volta para onde estava depois de entrar. Filtros, página e pedido aberto ficam na URL.
 

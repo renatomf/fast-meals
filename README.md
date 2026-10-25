@@ -30,6 +30,17 @@ O banco fica na porta 5433 do host para não colidir com um PostgreSQL local na 
 | Admin (tudo)        | `admin@fastmeals.com`  | `Admin@123`  |
 | Viewer (só leitura) | `viewer@fastmeals.com` | `Viewer@123` |
 
+### Ver o painel ao vivo
+
+Com o ambiente no ar, o simulador faz o restaurante funcionar pela API: chegam pedidos, a cozinha avança e as entregas terminam. Os pedidos prontos ficam para o despacho.
+
+```bash
+npm install          # uma vez, na raiz
+npm run simulate     # Ctrl+C para parar
+```
+
+Na tela de despacho, o botão "Cenário de demonstração" cria pedidos e entregadores em posições onde a escolha óbvia (cada pedido para o entregador mais próximo) perde para o algoritmo.
+
 ## Rodando sem Docker
 
 Requer Node.js 24.22.1 ou superior na linha 24 (veja `.nvmrc`) e um PostgreSQL acessível.
