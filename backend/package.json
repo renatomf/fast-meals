@@ -12,7 +12,8 @@
     "bench:listings": "node --env-file-if-exists=../.env bench/listings.ts",
     "db:generate": "drizzle-kit generate",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "simulate": "node scripts/simulate.ts"
   },
   "dependencies": {
     "@fastify/cookie": "11.1.3",

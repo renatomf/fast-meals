@@ -22,7 +22,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:no-js": "node scripts/check-no-js.ts",
-    "test:e2e": "npm run test:e2e --workspace e2e"
+    "test:e2e": "npm run test:e2e --workspace e2e",
+    "simulate": "npm run simulate --workspace backend"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
