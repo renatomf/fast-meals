@@ -59,7 +59,14 @@ async function toApiError(response: Response): Promise<ApiError> {
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   let response = await send(path, options);
   if (response.status === 401 && getAccessToken() !== null) {
-    const renewed = await refreshSession();
+    let renewed;
+    try {
+      renewed = await refreshSession();
+    } catch {
+      // Renovação indisponível agora (limite, servidor fora): a requisição falha, mas a
+      // sessão não é dada como encerrada.
+      throw await toApiError(response);
+    }
     if (!renewed) {
       notifySessionExpired();
       throw await toApiError(response);

@@ -31,14 +31,43 @@ async function requestRefresh(): Promise<Response> {
 // janela de tolerância do backend e, logo depois, já tem o cookie novo gravado pela
 // primeira. Uma segunda tentativa resolve sem derrubar a sessão.
 const SECOND_ATTEMPT_DELAY_MS = 300;
+const MAX_RATE_LIMIT_WAIT_MS = 10_000;
 
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// A renovação não foi possível agora (limite de requisições, servidor fora), mas a sessão
+// pode continuar válida: quem chama não deve tratar isso como logout.
+export class SessionUnavailableError extends Error {
+  readonly status: number;
+
+  constructor(status: number) {
+    super("Não foi possível renovar a sessão agora. Tente novamente em instantes.");
+    this.name = "SessionUnavailableError";
+    this.status = status;
+  }
+}
+
+// Só um 401 encerra a sessão. Um 429 espera o Retry-After e tenta de novo; qualquer outra
+// falha vira SessionUnavailableError. Antes, um F5 com o limite de requisições estourado
+// deslogava o usuário com a sessão válida (achado pelo teste E2E).
 async function refreshOnce(): Promise<RestoredSession | null> {
   let response = await requestRefresh();
   if (response.status === 401) {
-    await new Promise((resolve) => setTimeout(resolve, SECOND_ATTEMPT_DELAY_MS));
+    await wait(SECOND_ATTEMPT_DELAY_MS);
     response = await requestRefresh();
   }
-  if (!response.ok) return null;
+  if (response.status === 429) {
+    const seconds = Number(response.headers.get("retry-after"));
+    await wait(
+      Math.min(
+        Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : 1000,
+        MAX_RATE_LIMIT_WAIT_MS,
+      ),
+    );
+    response = await requestRefresh();
+  }
+  if (response.status === 401) return null;
+  if (!response.ok) throw new SessionUnavailableError(response.status);
   const body = (await response.json()) as RefreshResponse;
   setAccessToken(body.accessToken);
   return { accessToken: body.accessToken, user: body.user };
