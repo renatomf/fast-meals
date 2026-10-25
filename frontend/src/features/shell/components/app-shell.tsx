@@ -1,6 +1,6 @@
 import { Outlet } from "@tanstack/react-router";
-import { LogOut, Menu } from "lucide-react";
-import { useState } from "react";
+import { LogOut, Menu, Search } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { Logo } from "@/design-system/brand/logo";
 import { ThemeToggle } from "@/design-system/components/theme-toggle";
@@ -9,6 +9,7 @@ import { Button } from "@/design-system/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/design-system/ui/sheet";
 import { useRealtime } from "@/hooks/use-realtime";
 import { AppNavigation } from "./app-navigation";
+import { CommandPalette } from "./command-palette";
 import { LiveIndicator } from "./live-indicator";
 
 // Barra lateral estreita e clara, cabeçalho com o usuário à direita (padrão Stripe).
@@ -17,6 +18,19 @@ export function AppShell() {
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const realtime = useRealtime(user !== null);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  // Ctrl+K no Windows e no Linux, ⌘K no Mac, de qualquer lugar do painel.
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key.toLowerCase() === "k" && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        setPaletteOpen((current) => !current);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   return (
     <div className="flex min-h-svh">
@@ -39,6 +53,20 @@ export function AppShell() {
             <Menu />
           </Button>
           <Logo size="sm" className="lg:hidden" />
+
+          <Button
+            variant="secondary"
+            className="ml-auto w-auto justify-start gap-2 text-muted-foreground sm:w-56 lg:ml-0"
+            onClick={() => setPaletteOpen(true)}
+            aria-keyshortcuts="Control+K Meta+K"
+          >
+            <Search />
+            <span className="hidden sm:inline">Buscar…</span>
+            <kbd className="ml-auto hidden rounded border bg-muted px-1.5 font-sans text-xs sm:inline">
+              Ctrl K
+            </kbd>
+            <span className="sr-only sm:hidden">Buscar</span>
+          </Button>
 
           <div className="ml-auto flex items-center gap-2">
             <LiveIndicator status={realtime} />
@@ -63,6 +91,8 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
+
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
 
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
         <SheetContent side="left" className="gap-6 px-3 py-4">
