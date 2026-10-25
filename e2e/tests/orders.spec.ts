@@ -86,7 +86,7 @@ test.describe("admin", () => {
     await page.keyboard.press("Escape");
     await page.getByRole("tab", { name: "Cancelado" }).click();
     await expect(page).toHaveURL(/status=cancelled/);
-    await expect(page.getByRole("row", { name: new RegExp(customer) })).toBeVisible();
+    await expect(page.getByRole("row").filter({ hasText: customer })).toBeVisible();
   });
 });
 

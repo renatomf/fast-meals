@@ -26,7 +26,7 @@ test("an order created in one tab shows up in the other without reloading", asyn
   await expect(other.getByRole("dialog", { name: customer })).toBeVisible();
 
   // A primeira aba não foi tocada desde o login.
-  await expect(page.getByRole("row", { name: new RegExp(customer) })).toBeVisible({
+  await expect(page.getByRole("row").filter({ hasText: customer })).toBeVisible({
     timeout: 5_000,
   });
 });

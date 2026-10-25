@@ -2,15 +2,15 @@ import { expect, test, type Page } from "@playwright/test";
 import { expectNoSeriousA11yViolations, signIn } from "./support.ts";
 
 const customer = "[Demo] Cliente Moema oeste";
-const customerPattern = new RegExp(customer.replace(/[[\]]/g, "\\$&"));
 
 // Rodadas anteriores deixam pedidos do cenário em entrega: o teste compara a contagem de
-// antes e de depois, em vez de procurar uma linha só.
+// antes e de depois, em vez de procurar uma linha só. Filtra pelo texto, sem montar regex
+// a partir do nome.
 async function deliveringRows(page: Page) {
   await page.goto("/orders?status=delivering");
   await expect(page.getByRole("heading", { name: "Pedidos" })).toBeVisible();
   await page.waitForLoadState("networkidle");
-  return page.getByRole("row", { name: customerPattern }).count();
+  return page.getByRole("row").filter({ hasText: customer }).count();
 }
 
 // O fluxo principal do desafio: cenário de demonstração, sugestão do Húngaro, aceite e o
