@@ -11,22 +11,22 @@ Legenda: ✅ entregue · 🔄 em andamento · ⏳ planejado
 | ELI-1 | Compila e roda com as instruções                                                     | ✅     | `docker compose up --build` e o caminho sem Docker validados em clone limpo; job `docker` do CI sobe a stack com o mesmo comando                                                                                                                                                                 |
 | ELI-2 | Nenhum JavaScript puro                                                               | ✅     | Configs em `.ts`; [`scripts/check-no-js.ts`](../scripts/check-no-js.ts) no CI                                                                                                                                                                                                                    |
 | ELI-3 | Existem testes                                                                       | ✅     | [`backend/tests`](../backend/tests): 245 testes; mínimos de TST-1 cumpridos                                                                                                                                                                                                                      |
-| ELI-4 | Código gerado por IA com entendimento                                                | 🔄     | Seção "Uso de IA" no [`DECISIONS.md`](../DECISIONS.md)                                                                                                                                                                                                                                           |
+| ELI-4 | Código gerado por IA com entendimento                                                | ✅     | Seção "Uso de IA" no [`DECISIONS.md`](../DECISIONS.md): cada proteção validada com defeito introduzido de propósito, conferência da API contra o spec e clone limpo                                                                                                                              |
 | ELI-5 | `DECISIONS.md` presente                                                              | ✅     | [`DECISIONS.md`](../DECISIONS.md)                                                                                                                                                                                                                                                                |
 | ELI-6 | PostgreSQL                                                                           | ✅     | PostgreSQL 18.6 ([`docker/postgres`](../docker/postgres/Dockerfile))                                                                                                                                                                                                                             |
 | ELI-7 | Sem vulnerabilidades graves (SQL injection, senha em texto puro, token sem httpOnly) | ✅     | bcrypt custo 12, refresh token em cookie httpOnly ([ADR 0004](adr/0004-token-storage-and-rotation.md)), toda consulta parametrizada pelo Drizzle (a única interpolação crua são listas constantes do código) e busca com curingas do `LIKE` escapados; imagens e dependências sem CVE corrigível |
 
 ## Stack e qualidade de código
 
-| ID    | Requisito                                        | Status | Onde                                                                                                                                       |
-| ----- | ------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| STK-1 | React 18+ com TypeScript                         | ✅     | React 19.3 ([`frontend`](../frontend))                                                                                                     |
-| STK-2 | Node.js + TypeScript com Express, Fastify ou Koa | ✅     | Fastify 5 ([`backend/src/app.ts`](../backend/src/app.ts))                                                                                  |
-| STK-3 | ORM ou query builder justificado                 | ✅     | Drizzle ([`backend/src/models`](../backend/src/models)); justificativa na tabela "Bibliotecas" do `DECISIONS.md`                           |
-| STK-4 | Bibliotecas adicionais justificadas              | 🔄     | Tabela "Bibliotecas" do `DECISIONS.md`                                                                                                     |
-| QLT-1 | `strict: true`                                   | ✅     | [`tsconfig.base.json`](../tsconfig.base.json)                                                                                              |
-| QLT-2 | Nenhum `any`                                     | ✅     | `@typescript-eslint/no-explicit-any: error`                                                                                                |
-| QLT-3 | SOLID, separação de camadas, nomes descritivos   | 🔄     | [ADR 0001](adr/0001-modular-monolith-and-shared-contracts.md); fronteiras verificadas por lint; máquina de estados pura em `orders/domain` |
+| ID    | Requisito                                        | Status | Onde                                                                                                                                                                                 |
+| ----- | ------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| STK-1 | React 18+ com TypeScript                         | ✅     | React 19.3 ([`frontend`](../frontend))                                                                                                                                               |
+| STK-2 | Node.js + TypeScript com Express, Fastify ou Koa | ✅     | Fastify 5 ([`backend/src/app.ts`](../backend/src/app.ts))                                                                                                                            |
+| STK-3 | ORM ou query builder justificado                 | ✅     | Drizzle ([`backend/src/models`](../backend/src/models)); justificativa na tabela "Bibliotecas" do `DECISIONS.md`                                                                     |
+| STK-4 | Bibliotecas adicionais justificadas              | ✅     | Tabela "Bibliotecas" do [`DECISIONS.md`](../DECISIONS.md), uma linha por dependência de produção do front e do back                                                                  |
+| QLT-1 | `strict: true`                                   | ✅     | [`tsconfig.base.json`](../tsconfig.base.json)                                                                                                                                        |
+| QLT-2 | Nenhum `any`                                     | ✅     | `@typescript-eslint/no-explicit-any: error`                                                                                                                                          |
+| QLT-3 | SOLID, separação de camadas, nomes descritivos   | ✅     | [ADR 0001](adr/0001-modular-monolith-and-shared-contracts.md); fronteiras verificadas por lint; máquina de estados pura em `orders/domain`; services testáveis com repositório falso |
 
 ## 1. Autenticação e autorização
 
@@ -136,13 +136,13 @@ Legenda: ✅ entregue · 🔄 em andamento · ⏳ planejado
 
 ## Entrega
 
-| ID    | Requisito                                                             | Status | Onde                                                                                            |
-| ----- | --------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------- |
-| DEL-1 | Código completo (backend + frontend)                                  | 🔄     |                                                                                                 |
-| DEL-2 | `DECISIONS.md` com bibliotecas, algoritmo, arquitetura e dificuldades | 🔄     | [`DECISIONS.md`](../DECISIONS.md)                                                               |
-| DEL-3 | `docker-compose.yml` subindo backend, frontend e banco                | ✅     | [`docker-compose.yml`](../docker-compose.yml); funciona com `docker compose` e `docker-compose` |
-| DEL-4 | Instruções no README do backend e do frontend                         | 🔄     | [`backend/README.md`](../backend/README.md) atualizado a cada entrega                           |
-| DEL-5 | Backend na porta 3001, frontend na 3000                               | ✅     |                                                                                                 |
+| ID    | Requisito                                                             | Status | Onde                                                                                                                                                 |
+| ----- | --------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DEL-1 | Código completo (backend + frontend)                                  | ✅     | Todas as telas e rotas do enunciado; validado em clone limpo, com e sem Docker                                                                       |
+| DEL-2 | `DECISIONS.md` com bibliotecas, algoritmo, arquitetura e dificuldades | ✅     | [`DECISIONS.md`](../DECISIONS.md) e seis ADRs em [`docs/adr/`](adr/)                                                                                 |
+| DEL-3 | `docker-compose.yml` subindo backend, frontend e banco                | ✅     | [`docker-compose.yml`](../docker-compose.yml); funciona com `docker compose` e `docker-compose`                                                      |
+| DEL-4 | Instruções no README do backend e do frontend                         | ✅     | [`README.md`](../README.md) (com "Avalie em 5 minutos"), [`backend/README.md`](../backend/README.md) e [`frontend/README.md`](../frontend/README.md) |
+| DEL-5 | Backend na porta 3001, frontend na 3000                               | ✅     |                                                                                                                                                      |
 
 ## Diferenciais listados nos critérios
 
