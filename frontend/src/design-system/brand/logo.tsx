@@ -42,7 +42,7 @@ export function Logo({ size = "md", className, ...props }: LogoProps) {
   return (
     <span data-logo className={cn("inline-flex items-center gap-2", className)} {...props}>
       <LogoMark className={sizes[size].mark} />
-      <span className={cn("leading-none font-extrabold tracking-[-0.035em]", sizes[size].text)}>
+      <span className={cn("leading-none font-extrabold tracking-0", sizes[size].text)}>
         Fast<span className="ml-[0.2em] text-brand">Meals</span>
       </span>
     </span>
