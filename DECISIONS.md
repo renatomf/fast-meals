@@ -153,7 +153,7 @@ Migrations e seeds usam um pool sem esses limites, porque um `CREATE INDEX` numa
 - **Redirecionamento seguro.** Depois do login, o usuário volta para a página que pediu, mas só se o destino for um caminho do próprio app. `//evil.com` e `/\evil.com` voltam para o início.
 - **Permissões na tela.** O viewer vê as ações desabilitadas, com o motivo no tooltip, em vez de clicar e receber 403. O backend continua sendo a barreira real.
 - **Sem TanStack Table.** Paginação, filtros e ordenação acontecem no servidor; uma biblioteca de tabela resolveria no cliente o que já está resolvido na API. A `DataTable` do design system é genérica e tem menos de 100 linhas.
-- **Paleta Ctrl+K sem biblioteca.** Navegação, filas, tema e busca de produtos num combobox ARIA de cerca de 250 linhas, sobre o `Dialog` do design system. O `cmdk` traria outra cópia dos primitivos do Radix para uma lista curta.
+- **Paleta Ctrl+K sem biblioteca.** Navegação, filas, tema e busca de produtos num combobox ARIA de menos de 300 linhas, sobre o `Dialog` do design system. O `cmdk` traria outra cópia dos primitivos do Radix para uma lista curta.
 - **Mapa neutro.** Os tiles do OpenStreetMap ficam em tons de cinza (e invertidos no tema escuro), para que as únicas cores do mapa sejam pedidos, entregadores e rotas.
 - **Carga sob demanda.** Dashboard e pedidos são carregados quando a rota abre. O bundle inicial caiu de 999 kB para 404 kB (129 kB com gzip), e o Recharts só chega com o dashboard.
 
