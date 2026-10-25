@@ -1,8 +1,33 @@
 # FastMeals
 
+[![CI](https://github.com/renatomf/fast-meals/actions/workflows/ci.yml/badge.svg)](https://github.com/renatomf/fast-meals/actions/workflows/ci.yml)
+
 Painel administrativo de uma plataforma de delivery: cardápio, pedidos, entregadores, relatórios e atribuição otimizada de entregas. Solução do [desafio técnico](docs/challenge.md) para Engenheiro de Software Sênior.
 
-> Projeto em desenvolvimento. A [matriz de rastreabilidade](docs/requirements-traceability.md) mostra o que já foi entregue, requisito por requisito.
+![Despacho: o algoritmo Húngaro sugere as atribuições, compara com o guloso e mostra a matriz de distâncias](docs/images/dispatch.gif)
+
+## Avalie em 5 minutos
+
+1. **Suba tudo:** `docker compose up --build` (ou `docker-compose up --build`). Migrations e seed rodam sozinhos.
+2. **Entre** em http://localhost:3000 com o botão "Entrar como admin".
+3. **Veja o algoritmo:** em **Despacho**, clique em "Cenário de demonstração" e depois em "Sugerir Atribuição Otimizada". O card compara o Húngaro com o guloso (mandar cada pedido ao entregador mais próximo), o mapa mostra as rotas e "Ver matriz de distâncias" mostra por que o ótimo às vezes ignora o par mais próximo. Aceite uma sugestão: o pedido vai para "Em entrega".
+4. **Veja o resto:** pedidos com filtros e ações por status, cardápio, entregadores e relatórios. `Ctrl+K` abre a busca de qualquer tela; o tema escuro fica no cabeçalho.
+5. **Entre como viewer** (`viewer@fastmeals.com` / `Viewer@123`): tudo aparece, as ações ficam desabilitadas com o motivo.
+
+Opcional:
+
+- **Volume para os relatórios:** `docker compose exec backend node src/db/seed-load.ts` cria 10 mil pedidos encerrados nos últimos 90 dias.
+- **Painel ao vivo:** `npm install && npm run simulate` na raiz faz o restaurante funcionar pela API; as telas abertas atualizam sozinhas.
+- **API:** Swagger em http://localhost:3001/api/docs.
+
+### O que olhar no código
+
+| Para avaliar | Comece por                                                                                                                                                                                                                                              |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Algoritmo    | [`hungarian.ts`](backend/src/algorithms/hungarian.ts), [`haversine.ts`](backend/src/algorithms/haversine.ts), [ADR 0002](docs/adr/0002-hungarian-assignment.md) e [`assignment.test.ts`](backend/tests/assignment.test.ts) (Húngaro contra força bruta) |
+| Requisitos   | [`docs/requirements-traceability.md`](docs/requirements-traceability.md): onde cada requisito está e como é testado                                                                                                                                     |
+| Decisões     | [`DECISIONS.md`](DECISIONS.md) e os [ADRs](docs/adr/)                                                                                                                                                                                                   |
+| Desempenho   | [`docs/benchmarks.md`](docs/benchmarks.md)                                                                                                                                                                                                              |
 
 ## Rodando com Docker
 
@@ -30,17 +55,6 @@ O banco fica na porta 5433 do host para não colidir com um PostgreSQL local na 
 | Admin (tudo)        | `admin@fastmeals.com`  | `Admin@123`  |
 | Viewer (só leitura) | `viewer@fastmeals.com` | `Viewer@123` |
 
-### Ver o painel ao vivo
-
-Com o ambiente no ar, o simulador faz o restaurante funcionar pela API: chegam pedidos, a cozinha avança e as entregas terminam. Os pedidos prontos ficam para o despacho.
-
-```bash
-npm install          # uma vez, na raiz
-npm run simulate     # Ctrl+C para parar
-```
-
-Na tela de despacho, o botão "Cenário de demonstração" cria pedidos e entregadores em posições onde a escolha óbvia (cada pedido para o entregador mais próximo) perde para o algoritmo.
-
 ## Rodando sem Docker
 
 Requer Node.js 24.22.1 ou superior na linha 24 (veja `.nvmrc`) e um PostgreSQL acessível.
@@ -60,6 +74,8 @@ cd frontend
 npm install
 npm run dev            # http://localhost:3000
 ```
+
+O botão "Cenário de demonstração" do despacho só funciona com `DEMO_MODE=true` no `.env` (no Docker ele já vem ligado). O volume de 10 mil pedidos para os relatórios sai com `npm run seed:load` em `backend/`.
 
 Instruções específicas em [`backend/README.md`](backend/README.md) e [`frontend/README.md`](frontend/README.md).
 
