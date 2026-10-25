@@ -11,9 +11,12 @@ import { z } from "zod";
 import type { AuthState } from "@/context/auth-context";
 import { LoginPage } from "@/features/auth";
 import { dashboardSearchSchema, loadDashboardPage } from "@/features/dashboard";
+import { deliveryPersonsSearchSchema, loadDeliveryPersonsPage } from "@/features/delivery-persons";
 import { loadDispatchPage } from "@/features/dispatch";
 import { loadOrdersPage, ordersSearchSchema } from "@/features/orders";
-import { AppShell, ComingSoonPage, NotFoundPage, RouteError } from "@/features/shell";
+import { loadProductsPage, productsSearchSchema } from "@/features/products";
+import { loadReportsPage, reportsSearchSchema } from "@/features/reports";
+import { AppShell, NotFoundPage, RouteError } from "@/features/shell";
 import { safeRedirect } from "@/utils/safe-redirect";
 
 export type RouterContext = { auth: AuthState; queryClient: QueryClient };
@@ -80,12 +83,26 @@ const dispatchRoute = createRoute({
   component: lazyRouteComponent(loadDispatchPage, "DispatchPage"),
 });
 
-const comingSoon = <TPath extends string>(path: TPath, title: string) =>
-  createRoute({
-    getParentRoute: () => appRoute,
-    path,
-    component: () => <ComingSoonPage title={title} />,
-  });
+const productsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/products",
+  validateSearch: productsSearchSchema,
+  component: lazyRouteComponent(loadProductsPage, "ProductsPage"),
+});
+
+const deliveryPersonsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/delivery-persons",
+  validateSearch: deliveryPersonsSearchSchema,
+  component: lazyRouteComponent(loadDeliveryPersonsPage, "DeliveryPersonsPage"),
+});
+
+const reportsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/reports",
+  validateSearch: reportsSearchSchema,
+  component: lazyRouteComponent(loadReportsPage, "ReportsPage"),
+});
 
 // Endereço desconhecido também passa pelo login e mostra o 404 dentro do shell, com a navegação.
 const notFoundRoute = createRoute({
@@ -100,9 +117,9 @@ const routeTree = rootRoute.addChildren([
     dashboardRoute,
     ordersRoute,
     dispatchRoute,
-    comingSoon("/products", "Cardápio"),
-    comingSoon("/delivery-persons", "Entregadores"),
-    comingSoon("/reports", "Relatórios"),
+    productsRoute,
+    deliveryPersonsRoute,
+    reportsRoute,
     notFoundRoute,
   ]),
 ]);

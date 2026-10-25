@@ -5,7 +5,7 @@ import {
   fetchOrdersByStatus,
   fetchRevenue,
   reportKeys,
-} from "../services/dashboard-api";
+} from "@/services/reports-api";
 
 // Período atual e o imediatamente anterior, do mesmo tamanho: a variação dos indicadores
 // compara janelas iguais.
