@@ -35,6 +35,27 @@ test("login, dashboard and orders have no serious violations in both themes", as
       await page.getByRole("row").nth(1).click();
       await expect(page.getByRole("dialog")).toBeVisible();
       await expectNoSeriousA11yViolations(page);
+      await page.keyboard.press("Escape");
+
+      await page.getByRole("link", { name: "Cardápio" }).click();
+      await expect(page.getByRole("switch").first()).toBeVisible();
+      await expectNoSeriousA11yViolations(page);
+      // Formulário com os erros de validação à mostra.
+      await page.getByRole("button", { name: "Novo produto" }).click();
+      const form = page.getByRole("dialog", { name: "Novo produto" });
+      await form.getByRole("button", { name: "Cadastrar produto" }).click();
+      await expect(form.getByText("O nome deve ter entre 3 e 120 caracteres")).toBeVisible();
+      await expectNoSeriousA11yViolations(page);
+      await page.keyboard.press("Escape");
+
+      await page.getByRole("link", { name: "Entregadores" }).click();
+      await expect(page.getByRole("row").nth(1)).toBeVisible();
+      await expectNoSeriousA11yViolations(page);
+
+      await page.getByRole("link", { name: "Relatórios" }).click();
+      await expect(page.getByText("Produtos mais vendidos")).toBeVisible();
+      await page.waitForLoadState("networkidle");
+      await expectNoSeriousA11yViolations(page);
     });
   }
 });

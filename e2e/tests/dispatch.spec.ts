@@ -1,10 +1,25 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { expectNoSeriousA11yViolations, signIn } from "./support.ts";
+
+const customer = "[Demo] Cliente Moema oeste";
+const customerPattern = new RegExp(customer.replace(/[[\]]/g, "\\$&"));
+
+// Rodadas anteriores deixam pedidos do cenário em entrega: o teste compara a contagem de
+// antes e de depois, em vez de procurar uma linha só.
+async function deliveringRows(page: Page) {
+  await page.goto("/orders?status=delivering");
+  await expect(page.getByRole("heading", { name: "Pedidos" })).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  return page.getByRole("row", { name: customerPattern }).count();
+}
 
 // O fluxo principal do desafio: cenário de demonstração, sugestão do Húngaro, aceite e o
 // pedido saindo para entrega. Um login só, como nas outras suítes.
 test("admin optimizes the dispatch and sends an order out for delivery", async ({ page }) => {
-  await signIn(page, "admin", "/dispatch");
+  await signIn(page, "admin", "/orders");
+  const before = await deliveringRows(page);
+
+  await page.getByRole("link", { name: "Despacho" }).click();
   await expect(page.getByRole("heading", { name: "Despacho" })).toBeVisible();
 
   await page.getByRole("button", { name: "Cenário de demonstração" }).click();
@@ -16,12 +31,11 @@ test("admin optimizes the dispatch and sends an order out for delivery", async (
   // O cenário é montado para o guloso perder: o card mostra a economia.
   await expect(summary.getByText(/km a menos/)).toBeVisible();
 
-  const suggestions = page.getByRole("list", { name: "Sugestões de atribuição" });
-  const demoSuggestion = suggestions
+  const suggestion = page
+    .getByRole("list", { name: "Sugestões de atribuição" })
     .getByRole("listitem")
-    .filter({ hasText: "[Demo] Cliente Moema oeste" });
-  const customer = "[Demo] Cliente Moema oeste";
-  await expect(demoSuggestion).toBeVisible();
+    .filter({ hasText: customer });
+  await expect(suggestion).toBeVisible();
 
   // A matriz de distâncias abre num diálogo acessível e fecha com Esc.
   await page.getByRole("button", { name: "Ver matriz de distâncias" }).click();
@@ -30,21 +44,17 @@ test("admin optimizes the dispatch and sends an order out for delivery", async (
   await expectNoSeriousA11yViolations(page);
   await page.keyboard.press("Escape");
   await expect(matrix).toBeHidden();
-
   await expectNoSeriousA11yViolations(page);
 
-  await demoSuggestion.getByRole("button", { name: /^Aceitar:/ }).click();
-  await expect(demoSuggestion.getByText("Saiu para entrega")).toBeVisible();
-  // Saiu da lista de prontos assim que a API confirmou.
+  await suggestion.getByRole("button", { name: /^Aceitar:/ }).click();
+  await expect(suggestion.getByText("Saiu para entrega")).toBeVisible();
+  // Quando a API confirma, o pedido sai da lista de prontos (só a linha da sugestão fica).
   await expect(
     page
       .getByRole("complementary", { name: "Pedidos, entregadores e sugestões" })
       .getByText(customer),
   ).toHaveCount(1);
 
-  // E está em entrega, com entregador, na tela de pedidos.
-  await page.goto("/orders?status=delivering");
-  const row = page.getByRole("row", { name: new RegExp(customer.replace(/[[\]]/g, "\\$&")) });
-  await expect(row).toBeVisible();
-  await expect(row.getByText("Em entrega")).toBeVisible();
+  // E está em entrega na tela de pedidos: um a mais do que antes.
+  expect(await deliveringRows(page)).toBe(before + 1);
 });
