@@ -9,6 +9,7 @@ Este documento registra o que escolhi, por que escolhi e o que deu errado no cam
 - [ADR 0003 — Integridade e concorrência garantidas pelo banco](docs/adr/0003-database-integrity-and-concurrency.md)
 - [ADR 0004 — Access token em memória, refresh token em cookie httpOnly com rotação](docs/adr/0004-token-storage-and-rotation.md)
 - [ADR 0005 — Atualização em tempo real por LISTEN/NOTIFY e WebSocket](docs/adr/0005-real-time-updates.md)
+- [ADR 0006 — Caminho para escalar além de uma instância](docs/adr/0006-scaling-path.md)
 
 Resumo: `backend/`, `frontend/` e `packages/contracts/` num monorepo com npm workspaces. Os schemas Zod do pacote de contratos validam a API, geram o Swagger e validam os formulários do front. As fronteiras entre camadas são regras de lint, não convenção.
 
