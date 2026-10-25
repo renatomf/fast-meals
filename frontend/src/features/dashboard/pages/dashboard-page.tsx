@@ -180,7 +180,9 @@ export function DashboardPage() {
             <CardDescription>Os que esperam há mais tempo aparecem primeiro</CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="grid gap-6 md:grid-cols-2">
+        {/* grid-cols-1 (minmax(0, 1fr)) e não a coluna implícita: esta cresceria até caber o
+            nome inteiro do cliente, o truncate não agiria e o selo sairia do card no celular. */}
+        <CardContent className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <AttentionList
             title="Prontos, aguardando entregador"
             orders={readyOrders.data?.data}

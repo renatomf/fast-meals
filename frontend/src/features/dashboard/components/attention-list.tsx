@@ -15,7 +15,7 @@ type AttentionListProps = {
 // Os pedidos mais antigos primeiro: quem espera há mais tempo está no topo.
 export function AttentionList({ title, orders, loading, emptyMessage }: AttentionListProps) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex min-w-0 flex-col gap-2">
       <h3 className="text-xs font-semibold text-muted-foreground">{title}</h3>
       {loading ? (
         <Skeleton className="h-24" />
