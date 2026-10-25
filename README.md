@@ -113,6 +113,19 @@ $env:RATE_LIMIT_MAX=1000; docker compose up --build -d     # PowerShell
 
 O CI roda tudo isso, verifica que não há JavaScript no repositório, audita dependências e imagens Docker e sobe a stack completa com o mesmo comando acima para rodar o E2E.
 
+## Deploy (Render + Neon)
+
+O [`render.yaml`](render.yaml) descreve a mesma arquitetura do compose: a API e o front (nginx) como dois serviços Docker, com o banco no [Neon](https://neon.tech) (PostgreSQL 18).
+
+1. **Neon:** crie um projeto com PostgreSQL 18 e copie a connection string **direta** (host sem `-pooler`), trocando o final por `?sslmode=verify-full`. O tempo real usa `LISTEN`, que não funciona atrás do pooler.
+2. **Render:** New → Blueprint → este repositório. O Render cria os dois serviços e gera os segredos JWT.
+3. **Variáveis que ficam fora do repositório**, no painel do Render:
+   - `fastmeals-api` → `DATABASE_URL` (a do passo 1) e `CORS_ORIGIN` (a URL do front, ex.: `https://fastmeals.onrender.com`);
+   - `fastmeals` → `API_UPSTREAM` (a URL da API, ex.: `https://fastmeals-api.onrender.com`).
+4. **Volume para os relatórios (opcional):** `npm run seed:load` em `backend/` com o `DATABASE_URL` do Neon.
+
+A API aplica as migrations e o seed ao subir. No plano gratuito, os serviços dormem sem uso e o primeiro acesso leva cerca de um minuto.
+
 ## Documentação
 
 - [`DECISIONS.md`](DECISIONS.md): escolhas técnicas, premissas, segurança e dificuldades

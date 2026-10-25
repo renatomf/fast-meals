@@ -177,6 +177,17 @@ Os testes de [`e2e/`](e2e/) rodam no Chromium contra o ambiente do Docker Compos
 
 O logotipo fica fora da verificação de contraste: a WCAG isenta logotipos (critério 1.4.3), e o verde da marca sobre branco não passaria. O resto do texto é verificado.
 
+## Deploy
+
+Render para a API e o front, Neon para o PostgreSQL ([`render.yaml`](render.yaml)). A arquitetura é a mesma do compose: o nginx do front encaminha `/api` e `/ws` para a API, e o navegador fala com uma origem só, então o cookie do refresh token continua `SameSite=Strict`. O destino do nginx virou variável (`API_UPSTREAM`, template da imagem oficial), com o padrão do compose, e o `Host` enviado passou a ser o do destino, que é o que o roteador do Render usa.
+
+- **Conexão direta no Neon, não a "pooled".** O pooler roda em modo transação, e o `LISTEN` do tempo real perderia a inscrição. A API usa poucas conexões (pool de 10, mais uma para o `LISTEN`), bem dentro do limite do Neon.
+- **`sslmode=verify-full`.** Confere o certificado do servidor, e não só criptografa; o `require` vai mudar de significado no driver.
+- **Mesma região (Ohio) para a API e o banco.** Cada requisição faz várias consultas, e a latência entre os dois soma em cada uma.
+- **Só o proxy do Render é confiável** (`TRUST_PROXY_HOPS=1`). Confiar em mais saltos deixaria quem chama a API direto forjar o `X-Forwarded-For` e escapar do rate limit. O custo é que quem chega pelo front aparece com o IP do nginx e todos dividem o mesmo limite geral, por isso ele sobe para 600 por minuto. O bloqueio de login por email não depende do IP e continua igual.
+- **Segredos fora do repositório.** Os JWT são gerados pelo Render; a connection string e as URLs são preenchidas no painel.
+- **Validado antes do Render:** migrations, seed (duas vezes, a segunda sem efeito), `seed:load` e um `LISTEN/NOTIFY` de ponta a ponta rodaram contra o Neon.
+
 ## Dificuldades encontradas
 
 **O lint de arquitetura não verificava pacotes npm.** Escrevi a regra "algoritmos não importam `fastify`" e ela passava em silêncio. Criei arquivos com violações de propósito e confirmei que só as dependências locais eram checadas. A causa estava no código do plugin: pacotes externos só são avaliados com a opção `checkAllOrigins: true`, que o README não menciona. Desde então, toda regra nova de fronteira é testada com uma violação proposital antes de ser considerada pronta.

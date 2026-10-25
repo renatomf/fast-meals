@@ -12,15 +12,22 @@ server {
 
   # API e WebSocket na mesma origem do front: o cookie do refresh token
   # funciona com SameSite=Strict e o navegador não precisa de CORS.
+  # API_UPSTREAM vem do ambiente (template da imagem oficial do nginx): http://backend:3001
+  # no docker compose, a URL pública da API num deploy como o do Render. O Host enviado é
+  # o do destino, que é o que o roteador de uma plataforma usa para achar o serviço.
   location /api/ {
-    proxy_pass http://backend:3001;
-    proxy_set_header Host $host;
+    proxy_pass ${API_UPSTREAM};
+    proxy_ssl_server_name on;
+    proxy_set_header Host $proxy_host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
   }
 
   location /ws {
-    proxy_pass http://backend:3001;
+    proxy_pass ${API_UPSTREAM};
+    proxy_ssl_server_name on;
+    proxy_set_header Host $proxy_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
