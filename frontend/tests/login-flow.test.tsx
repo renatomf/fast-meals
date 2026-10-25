@@ -99,7 +99,11 @@ describe("login flow", () => {
 
     await user.click(await screen.findByRole("button", { name: "Entrar como admin" }));
 
-    expect(await screen.findByRole("heading", { name: "Visão geral" })).toBeInTheDocument();
+    // O dashboard é carregado sob demanda, com o Recharts: na primeira transformação do
+    // Vite, em paralelo com os outros arquivos, ele passa do segundo padrão do findBy.
+    expect(
+      await screen.findByRole("heading", { name: "Visão geral" }, { timeout: 10_000 }),
+    ).toBeInTheDocument();
     expect(window.location.origin + window.location.pathname).toBe(`${window.location.origin}/`);
-  });
+  }, 20_000);
 });

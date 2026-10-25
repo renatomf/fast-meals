@@ -58,6 +58,28 @@ test("login, dashboard and orders have no serious violations in both themes", as
       await expectNoSeriousA11yViolations(page);
     });
   }
+
+  // WCAG 1.4.10 (Reflow): num celular de 360 px, nenhuma tela rola na horizontal. Tabelas
+  // largas e abas rolam dentro do próprio contêiner, não a página.
+  await test.step("reflow at 360 px", async () => {
+    await page.setViewportSize({ width: 360, height: 740 });
+    for (const path of [
+      "/",
+      "/orders",
+      "/dispatch",
+      "/products",
+      "/delivery-persons",
+      "/reports",
+    ]) {
+      await page.goto(path);
+      await page.waitForLoadState("networkidle");
+      const width = await page.evaluate(() => ({
+        page: document.documentElement.scrollWidth,
+        viewport: document.documentElement.clientWidth,
+      }));
+      expect(width.page, `${path} rola na horizontal`).toBeLessThanOrEqual(width.viewport);
+    }
+  });
 });
 
 test("the main flow works with the keyboard alone", async ({ page }) => {
