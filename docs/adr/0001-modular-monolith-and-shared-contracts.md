@@ -19,15 +19,18 @@ Duas coisas me preocupavam desde o início:
 - **Backend como monólito modular**: um módulo por domínio (`products`, `orders`, `dispatch`...), cada um com `routes → controller → service → repository`. Domínio e algoritmos não conhecem HTTP nem banco.
 - **Os nomes de pasta sugeridos no enunciado foram mantidos.** A diferença é que, em vez de uma pasta `controllers/` com todos os controllers, cada domínio agrupa os seus arquivos. Assim, mudar a regra de pedidos é mexer numa pasta só:
 
-  | Sugestão do enunciado                                                                  | Onde está                                                                                     |
-  | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-  | `backend/src/routes`, `controllers`, `services`                                        | `backend/src/modules/<domínio>/<domínio>.{routes,controller,service}.ts`                      |
-  | `backend/src/models`                                                                   | `backend/src/models` (tabelas Drizzle)                                                        |
-  | `backend/src/middlewares`, `utils`, `algorithms`                                       | mesmos nomes                                                                                  |
-  | `backend/prisma` ("ou outro ORM")                                                      | `backend/drizzle` (migrations) e `backend/src/db/seed.ts`                                     |
-  | `backend/tests`, `frontend/tests`                                                      | mesmos nomes                                                                                  |
-  | `frontend/src/App.tsx`, `components`, `hooks`, `services`, `types`, `context`, `utils` | mesmos nomes                                                                                  |
-  | `frontend/src/pages`                                                                   | `frontend/src/features/<tela>/pages`, junto com os componentes, hooks e services daquela tela |
+  | Sugestão do enunciado                                                    | Onde está                                                                                                      |
+  | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+  | `backend/src/routes`, `controllers`, `services`                          | `backend/src/modules/<domínio>/<domínio>.{routes,controller,service}.ts`                                       |
+  | `backend/src/models`                                                     | `backend/src/models` (tabelas Drizzle)                                                                         |
+  | `backend/src/middlewares`, `utils`, `algorithms`                         | mesmos nomes                                                                                                   |
+  | `backend/prisma` ("ou outro ORM")                                        | `backend/drizzle` (migrations) e `backend/src/db/seed.ts`                                                      |
+  | `backend/tests`, `frontend/tests`                                        | mesmos nomes                                                                                                   |
+  | `frontend/src/App.tsx`, `hooks`, `services`, `types`, `context`, `utils` | mesmos nomes                                                                                                   |
+  | `frontend/src/components`                                                | `frontend/src/design-system/{ui,components}`, ao lado de `theme` (tokens e tema claro/escuro) e `brand` (logo) |
+  | `frontend/src/pages`                                                     | `frontend/src/features/<tela>/pages`, junto com os componentes, hooks e services daquela tela                  |
+
+- **O design system tem pasta própria, em camadas.** No dia 5 o `components/` do enunciado virou `design-system/`, porque ele guardava quatro coisas diferentes: `theme` (tokens e tema), `brand` (logo), `ui` (primitivos visuais, sem regra de negócio) e `components` (componentes de produto montados sobre os primitivos, que não buscam dados). Tema e marca não dependem de nenhum componente; primitivos não conhecem componentes de produto; nada no design system conhece as telas. O lint verifica as quatro regras.
 
 - **Backend sem etapa de build.** O Node 24 executa TypeScript nativamente (type stripping), então em produção rodo `node src/server.ts`. O `tsc` serve apenas para checagem de tipos. Isso exige sintaxe apagável (`erasableSyntaxOnly`): nada de `enum`, `namespace` ou parameter properties.
 - **Fronteiras verificadas no lint** com `eslint-plugin-boundaries`. Exemplos: um algoritmo não pode importar `fastify`; uma rota não pode importar o banco; uma feature do front só importa outra pelo `index.ts` dela. Uma violação quebra o CI.

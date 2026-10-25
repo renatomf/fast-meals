@@ -1,71 +1,56 @@
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ApiStatus } from "@/components/api-status";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { RouterProvider } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
+import { Toaster } from "sonner";
+import { AuthProvider, useAuth } from "@/context/auth-context";
+import { LogoMark } from "@/design-system/brand/logo";
+import { useTheme } from "@/design-system/theme/theme-provider";
+import { TooltipProvider } from "@/design-system/ui/tooltip";
+import { createQueryClient } from "@/services/query-client";
+import { createAppRouter } from "./router";
 
-const statuses = [
-  { label: "Pendente", className: "bg-status-pending" },
-  { label: "Em preparo", className: "bg-status-preparing" },
-  { label: "Pronto", className: "bg-status-ready" },
-  { label: "Em entrega", className: "bg-status-delivering" },
-  { label: "Entregue", className: "bg-status-delivered" },
-  { label: "Cancelado", className: "bg-status-cancelled" },
-];
+const queryClient = createQueryClient();
 
-// Tela provisória do dia 1: confirma tokens, temas e integração com a API.
-// Dá lugar ao app shell no dia 5.
-export function App() {
+function SplashScreen() {
   return (
-    <div className="min-h-svh">
-      <header className="flex h-14 items-center justify-between border-b bg-background px-4 sm:px-6">
-        <span className="text-sm font-semibold tracking-tight">FastMeals</span>
-        <div className="flex items-center gap-2">
-          <ApiStatus />
-          <ThemeToggle />
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-3xl space-y-6 px-4 py-10 sm:px-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Fundação</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Tokens, temas e primitivos do design system.
-          </p>
-        </div>
-
-        <section className="rounded-lg border bg-card p-5">
-          <h2 className="text-sm font-medium">Status de pedido</h2>
-          <ul className="mt-4 flex flex-wrap gap-2">
-            {statuses.map((status) => (
-              <li
-                key={status.label}
-                className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs"
-              >
-                <span aria-hidden className={`size-2 rounded-full ${status.className}`} />
-                {status.label}
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="rounded-lg border bg-card p-5">
-          <h2 className="text-sm font-medium">Ações</h2>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <Button>
-              <Plus /> Novo pedido
-            </Button>
-            <Button variant="secondary">Exportar</Button>
-            <Button variant="ghost">Cancelar</Button>
-            <Button variant="danger">Excluir</Button>
-            <Button size="sm" variant="secondary">
-              Compacto
-            </Button>
-          </div>
-          <p className="mt-4 text-sm text-muted-foreground tabular-nums">
-            Receita do período: <span className="font-medium text-foreground">R$ 48.250,90</span>
-          </p>
-        </section>
-      </main>
+    <div
+      className="grid min-h-svh place-items-center"
+      role="status"
+      aria-label="Carregando o painel"
+    >
+      <LogoMark className="size-10 animate-pulse" />
     </div>
+  );
+}
+
+// O roteador é criado uma vez; quando a sessão muda (login, logout, expiração), o contexto
+// é atualizado e as rotas reavaliam o beforeLoad, que redireciona quem não pode estar ali.
+function AppRouter() {
+  const { state } = useAuth();
+  const [router] = useState(() => createAppRouter({ auth: state, queryClient }));
+
+  useEffect(() => {
+    router.update({ ...router.options, context: { auth: state, queryClient } });
+    void router.invalidate();
+  }, [router, state]);
+
+  if (state.status === "loading") return <SplashScreen />;
+  return <RouterProvider router={router} context={{ auth: state, queryClient }} />;
+}
+
+export function App() {
+  const { theme } = useTheme();
+  // Ao sair ou quando a sessão expira, nada carregado pelo usuário anterior fica em cache.
+  const clearCache = useCallback(() => queryClient.clear(), []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider onSignOut={clearCache}>
+        <TooltipProvider>
+          <AppRouter />
+        </TooltipProvider>
+      </AuthProvider>
+      <Toaster theme={theme} position="bottom-right" richColors closeButton />
+    </QueryClientProvider>
   );
 }

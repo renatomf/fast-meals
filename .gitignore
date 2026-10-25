@@ -10,3 +10,7 @@ coverage/
 
 # Material de planejamento pessoal, não faz parte da entrega
 docs/planning/
+
+# Saída do Playwright
+test-results/
+playwright-report/

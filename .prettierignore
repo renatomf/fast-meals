@@ -7,3 +7,5 @@ docs/database-schema.md
 docs/evaluation-criteria.md
 seed/data.json
 backend/drizzle
+test-results
+playwright-report
