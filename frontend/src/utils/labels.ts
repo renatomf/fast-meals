@@ -1,4 +1,4 @@
-import type { VehicleType } from "@fastmeals/contracts";
+import type { ProductCategory, VehicleType } from "@fastmeals/contracts";
 
 // Rótulos de domínio usados em mais de uma tela.
 export const vehicleLabels = {
@@ -6,3 +6,10 @@ export const vehicleLabels = {
   motorcycle: "Moto",
   car: "Carro",
 } satisfies Record<VehicleType, string>;
+
+export const categoryLabels = {
+  meal: "Prato",
+  drink: "Bebida",
+  dessert: "Sobremesa",
+  side: "Acompanhamento",
+} satisfies Record<ProductCategory, string>;
