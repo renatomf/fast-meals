@@ -1,0 +1,78 @@
+/* O Leaflet escreve cores como atributos SVG; regras CSS vencem atributos, então as cores
+   do mapa vêm dos mesmos tokens do resto do painel e acompanham o tema. */
+
+.dispatch-map {
+  /* Os painéis do Leaflet usam z-index 400+: sem um contexto próprio, o mapa passaria por
+     cima de diálogos, gavetas e do cabeçalho fixo. */
+  isolation: isolate;
+  background: var(--muted);
+  font-family: inherit;
+}
+
+.dispatch-map .dispatch-order {
+  fill: var(--status-ready);
+  fill-opacity: 1;
+  stroke: var(--background);
+  stroke-width: 2;
+}
+
+.dispatch-map .dispatch-courier {
+  fill: var(--info);
+  fill-opacity: 1;
+  stroke: var(--background);
+  stroke-width: 2;
+}
+
+.dispatch-map .dispatch-route {
+  stroke: var(--brand);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 2 7;
+  animation: dispatch-route-flow 1.2s linear infinite;
+}
+
+.dispatch-map .dispatch-route-active {
+  stroke: var(--brand);
+  stroke-width: 6;
+  stroke-opacity: 0.9;
+}
+
+@keyframes dispatch-route-flow {
+  to {
+    stroke-dashoffset: -9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dispatch-map .dispatch-route {
+    animation: none;
+  }
+}
+
+/* Mapa em tons de cinza: as cores ficam para pedidos, entregadores e rotas. */
+.dispatch-map .leaflet-tile-pane {
+  filter: grayscale(1) contrast(0.92) brightness(1.04);
+}
+
+/* No tema escuro, os mesmos tiles invertidos: sem depender de outro provedor de mapas. */
+.dark .dispatch-map .leaflet-tile-pane {
+  filter: grayscale(1) invert(1) brightness(0.85) contrast(0.9);
+}
+
+.dispatch-map .leaflet-control-attribution {
+  background: color-mix(in oklab, var(--background) 85%, transparent);
+  color: var(--muted-foreground);
+}
+
+.dispatch-map .leaflet-control-attribution a {
+  color: var(--foreground);
+}
+
+.dispatch-map .leaflet-tooltip {
+  background: var(--popover);
+  color: var(--popover-foreground);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.12);
+  font-size: 12px;
+}

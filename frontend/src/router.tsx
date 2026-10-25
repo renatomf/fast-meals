@@ -11,6 +11,7 @@ import { z } from "zod";
 import type { AuthState } from "@/context/auth-context";
 import { LoginPage } from "@/features/auth";
 import { dashboardSearchSchema, loadDashboardPage } from "@/features/dashboard";
+import { loadDispatchPage } from "@/features/dispatch";
 import { loadOrdersPage, ordersSearchSchema } from "@/features/orders";
 import { AppShell, ComingSoonPage, NotFoundPage, RouteError } from "@/features/shell";
 import { safeRedirect } from "@/utils/safe-redirect";
@@ -73,6 +74,12 @@ const ordersRoute = createRoute({
 });
 
 // Genérico para manter o path literal: assim o <Link to="/dispatch"> continua tipado.
+const dispatchRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: "/dispatch",
+  component: lazyRouteComponent(loadDispatchPage, "DispatchPage"),
+});
+
 const comingSoon = <TPath extends string>(path: TPath, title: string) =>
   createRoute({
     getParentRoute: () => appRoute,
@@ -92,7 +99,7 @@ const routeTree = rootRoute.addChildren([
   appRoute.addChildren([
     dashboardRoute,
     ordersRoute,
-    comingSoon("/dispatch", "Despacho"),
+    dispatchRoute,
     comingSoon("/products", "Cardápio"),
     comingSoon("/delivery-persons", "Entregadores"),
     comingSoon("/reports", "Relatórios"),
