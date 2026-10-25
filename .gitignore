@@ -14,3 +14,7 @@ docs/planning/
 # Saída do Playwright
 test-results/
 playwright-report/
+
+# Stryker
+.stryker-tmp/
+backend/reports/

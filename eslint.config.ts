@@ -215,7 +215,14 @@ const architecture = {
 };
 
 export default defineConfig(
-  globalIgnores(["**/dist", "**/coverage", "**/node_modules", "backend/drizzle"]),
+  globalIgnores([
+    "**/dist",
+    "**/coverage",
+    "**/node_modules",
+    "backend/drizzle",
+    "**/.stryker-tmp",
+    "backend/reports",
+  ]),
   js.configs.recommended,
   tseslint.configs.strict,
   {
