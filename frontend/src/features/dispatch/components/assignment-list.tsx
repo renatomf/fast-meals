@@ -37,7 +37,7 @@ export function AssignmentList({
 }: AssignmentListProps) {
   return (
     <ul className="flex flex-col gap-2" aria-label="Sugestões de atribuição">
-      {assignments.map((assignment) => {
+      {assignments.map((assignment, index) => {
         const decision = decisions[assignment.orderId];
         const customer = customerNames.get(assignment.orderId) ?? "Pedido";
         const accepted = decision === "accepted";
@@ -69,8 +69,11 @@ export function AssignmentList({
             key={assignment.orderId}
             onMouseEnter={() => onActivate(assignment.orderId)}
             onMouseLeave={() => onActivate(undefined)}
+            // As sugestões entram em sequência, de cima para baixo (no máximo ~0,5 s no total).
+            style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
             className={cn(
-              "flex flex-col gap-2 rounded-lg border p-3 transition-colors duration-150",
+              "flex flex-col gap-2 rounded-lg border p-3 transition-[background-color,border-color,opacity] duration-150",
+              "animate-in [animation-fill-mode:both] fade-in-0 slide-in-from-left-2 duration-300",
               activeOrderId === assignment.orderId && "border-brand bg-brand-subtle/50",
               accepted && "opacity-60",
             )}

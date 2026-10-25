@@ -25,6 +25,18 @@ export function uniqueCustomer(prefix: string): string {
 // O logotipo fica de fora: a WCAG isenta logotipos da exigência de contraste (critério
 // 1.4.3), e o verde da marca sobre branco não passaria. Todo o resto do texto é verificado.
 export async function expectNoSeriousA11yViolations(page: Page) {
+  // No meio de um esmaecido de entrada o texto ainda está translúcido e o contraste medido
+  // sai menor que o real: espera as animações finitas terminarem. As infinitas (o
+  // tracejado das rotas no mapa) não terminam nunca e ficam de fora.
+  await page.waitForFunction(() =>
+    document
+      .getAnimations()
+      .every(
+        (animation) =>
+          animation.playState !== "running" ||
+          animation.effect?.getTiming().iterations === Number.POSITIVE_INFINITY,
+      ),
+  );
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .exclude("[data-logo]")

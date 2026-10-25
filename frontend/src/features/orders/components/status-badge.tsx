@@ -41,7 +41,8 @@ export function StatusBadge({ status }: { status: OrderStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex h-[22px] items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold whitespace-nowrap",
+        // A cor muda com transição: na atualização otimista, o novo status "acende" no lugar.
+        "inline-flex h-[22px] items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold whitespace-nowrap transition-colors duration-300",
         meta.className,
       )}
     >
