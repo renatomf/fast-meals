@@ -16,7 +16,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { PartialDayNote } from "@/design-system/components/partial-day-note";
 import { statusMeta } from "@/features/orders";
+import { todayInSaoPaulo } from "@/utils/dates";
 import {
   formatDecimal,
   formatInteger,
@@ -25,6 +27,7 @@ import {
   formatShortDate,
 } from "@/utils/format";
 import { vehicleLabels } from "@/utils/labels";
+import { dayAxisLabel, dayTooltipTitle, isPartialDay } from "@/utils/partial-day";
 
 const axisTick = { fill: "var(--muted-foreground)", fontSize: 12 };
 
@@ -45,63 +48,74 @@ type Day = RevenueReport["dailyRevenue"][number];
 
 // Uma barra por dia; o valor exato fica no tooltip. Os dias sem venda aparecem como zero
 // (a API preenche com generate_series), então lacunas no gráfico são dias parados de fato.
+// Se o período chega em hoje, a barra do dia fica mais clara: ele ainda não fechou.
 export function DailyRevenueChart({ report }: { report: RevenueReport }) {
+  const today = todayInSaoPaulo();
+  const includesToday = report.dailyRevenue.some((day) => isPartialDay(day.date, today));
   const best = report.dailyRevenue.reduce<Day | undefined>(
     (top, day) => (!top || day.revenue > top.revenue ? day : top),
     undefined,
   );
   return (
-    <div
-      className="h-72"
-      role="img"
-      aria-label={`Receita diária de ${formatShortDate(report.startDate)} a ${formatShortDate(report.endDate)}. ${
-        best && best.revenue > 0
-          ? `Melhor dia: ${formatShortDate(best.date)}, com ${formatMoney(best.revenue)}.`
-          : "Sem receita no período."
-      }`}
-    >
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={report.dailyRevenue} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-          <CartesianGrid vertical={false} stroke="var(--border)" />
-          <XAxis
-            dataKey="date"
-            tickFormatter={formatShortDate}
-            tickLine={false}
-            axisLine={false}
-            minTickGap={24}
-            tick={axisTick}
-          />
-          <YAxis
-            tickFormatter={(value: number) => formatMoney(value).replace(/,00$/, "")}
-            tickLine={false}
-            axisLine={false}
-            width={80}
-            tick={axisTick}
-          />
-          <Tooltip
-            cursor={{ fill: "var(--muted)" }}
-            content={({ active, payload }) => {
-              const day = payload?.[0]?.payload as Day | undefined;
-              if (!active || !day) return null;
-              return (
-                <ChartTooltip
-                  title={formatShortDate(day.date)}
-                  lines={[
-                    formatMoney(day.revenue),
-                    `${formatInteger(day.orders)} ${day.orders === 1 ? "pedido" : "pedidos"}`,
-                  ]}
-                />
-              );
-            }}
-          />
-          <Bar
-            dataKey="revenue"
-            fill="var(--chart-1)"
-            radius={[3, 3, 0, 0]}
-            isAnimationActive={false}
-          />
-        </BarChart>
-      </ResponsiveContainer>
+    <div>
+      <div
+        className="h-72"
+        role="img"
+        // A data curta já termina em ponto ("25 de out."): sem o replace, a frase sairia com "..".
+        aria-label={`Receita diária de ${formatShortDate(report.startDate)} a ${formatShortDate(report.endDate).replace(/\.$/, "")}. ${
+          best && best.revenue > 0
+            ? `Melhor dia: ${formatShortDate(best.date)}, com ${formatMoney(best.revenue)}.`
+            : "Sem receita no período."
+        }${includesToday ? " O dia de hoje ainda está em andamento." : ""}`}
+      >
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={report.dailyRevenue} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+            <CartesianGrid vertical={false} stroke="var(--border)" />
+            <XAxis
+              dataKey="date"
+              tickFormatter={(date: string) => dayAxisLabel(date, today)}
+              tickLine={false}
+              axisLine={false}
+              minTickGap={24}
+              tick={axisTick}
+            />
+            <YAxis
+              tickFormatter={(value: number) => formatMoney(value).replace(/,00$/, "")}
+              tickLine={false}
+              axisLine={false}
+              width={80}
+              tick={axisTick}
+            />
+            <Tooltip
+              cursor={{ fill: "var(--muted)" }}
+              content={({ active, payload }) => {
+                const day = payload?.[0]?.payload as Day | undefined;
+                if (!active || !day) return null;
+                return (
+                  <ChartTooltip
+                    title={dayTooltipTitle(day.date, today)}
+                    lines={[
+                      formatMoney(day.revenue),
+                      `${formatInteger(day.orders)} ${day.orders === 1 ? "pedido" : "pedidos"}`,
+                    ]}
+                  />
+                );
+              }}
+            />
+            <Bar
+              dataKey="revenue"
+              fill="var(--chart-1)"
+              radius={[3, 3, 0, 0]}
+              isAnimationActive={false}
+            >
+              {report.dailyRevenue.map((day) => (
+                <Cell key={day.date} fillOpacity={isPartialDay(day.date, today) ? 0.4 : 1} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      {includesToday && <PartialDayNote sample="faded" />}
     </div>
   );
 }
