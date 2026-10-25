@@ -7,13 +7,16 @@ import { ThemeToggle } from "@/design-system/components/theme-toggle";
 import { Badge } from "@/design-system/ui/badge";
 import { Button } from "@/design-system/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/design-system/ui/sheet";
+import { useRealtime } from "@/hooks/use-realtime";
 import { AppNavigation } from "./app-navigation";
+import { LiveIndicator } from "./live-indicator";
 
 // Barra lateral estreita e clara, cabeçalho com o usuário à direita (padrão Stripe).
 // Abaixo de 1024px a barra vira um menu que abre pela esquerda.
 export function AppShell() {
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const realtime = useRealtime(user !== null);
 
   return (
     <div className="flex min-h-svh">
@@ -38,6 +41,7 @@ export function AppShell() {
           <Logo size="sm" className="lg:hidden" />
 
           <div className="ml-auto flex items-center gap-2">
+            <LiveIndicator status={realtime} />
             <ThemeToggle />
             {user && (
               <div className="flex items-center gap-2 border-l pl-3">
