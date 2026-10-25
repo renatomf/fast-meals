@@ -4,6 +4,8 @@
 
 Painel administrativo de uma plataforma de delivery: cardápio, pedidos, entregadores, relatórios e **atribuição otimizada de entregas** (algoritmo Húngaro). Solução do [desafio técnico](docs/challenge.md) para Engenheiro de Software Sênior.
 
+**Demo online:** https://fastmeals.onrender.com (botão "Entrar como admin"). Fica no plano gratuito do Render: depois de um tempo sem uso, o primeiro acesso leva cerca de um minuto para acordar.
+
 ## Como rodar
 
 Só precisa do **Docker** (com Compose). Na raiz do projeto:
@@ -30,8 +32,8 @@ Pronto. Banco, migrations e dados de exemplo sobem sozinhos. Abra **http://local
 
 ## Visão geral
 
-| Tema claro                                                     | Tema escuro                                                     |
-| -------------------------------------------------------------- | --------------------------------------------------------------- |
+| Tema claro                                                    | Tema escuro                                                   |
+| ------------------------------------------------------------- | ------------------------------------------------------------- |
 | ![Visão geral no tema claro](docs/images/dashboard-light.png) | ![Visão geral no tema escuro](docs/images/dashboard-dark.png) |
 
 ![Despacho: o Húngaro sugere as atribuições, compara com o guloso e mostra a matriz de distâncias](docs/images/dispatch.gif)
@@ -48,12 +50,12 @@ Opcional:
 - **Volume para os relatórios:** `docker compose exec backend node src/db/seed-load.ts` cria 10 mil pedidos encerrados nos últimos 90 dias.
 - **Restaurante funcionando sozinho:** `npm install && npm run simulate` na raiz cria e avança pedidos pela API; as telas abertas atualizam ao vivo.
 
-| Para avaliar | Comece por                                                                                                                                                                                                            |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Para avaliar | Comece por                                                                                                                                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Algoritmo    | [`hungarian.ts`](backend/src/algorithms/hungarian.ts), [`haversine.ts`](backend/src/algorithms/haversine.ts), [ADR 0002](docs/adr/0002-hungarian-assignment.md), [`assignment.test.ts`](backend/tests/assignment.test.ts) |
-| Requisitos   | [`requirements-traceability.md`](docs/requirements-traceability.md): onde cada requisito está e como é testado                                                                                                        |
-| Decisões     | [`DECISIONS.md`](DECISIONS.md) e os [ADRs](docs/adr/)                                                                                                                                                                 |
-| Desempenho   | [`benchmarks.md`](docs/benchmarks.md)                                                                                                                                                                                 |
+| Requisitos   | [`requirements-traceability.md`](docs/requirements-traceability.md): onde cada requisito está e como é testado                                                                                                            |
+| Decisões     | [`DECISIONS.md`](DECISIONS.md) e os [ADRs](docs/adr/)                                                                                                                                                                     |
+| Desempenho   | [`benchmarks.md`](docs/benchmarks.md)                                                                                                                                                                                     |
 
 ## Arquitetura
 
@@ -77,7 +79,7 @@ flowchart LR
         P[("PostgreSQL 18")]
     end
 
-    B -- "HTTPS" --> N
+    B -- "HTTP(S)" --> N
     N -- "/api/*" --> F
     N -- "/ws (upgrade)" --> F
     F -- "SQL (Drizzle)" --> P
@@ -134,15 +136,15 @@ flowchart TB
     RP --> INF
 ```
 
-| Pasta                      | Responsabilidade                                                                                  |
-| -------------------------- | ------------------------------------------------------------------------------------------------- |
-| `src/modules/*`            | Um domínio por pasta: `*.routes.ts`, `*.controller.ts`, `*.service.ts`, `*.repository.ts`          |
-| `src/algorithms/`          | Atribuição ótima: Húngaro O(n²·m), guloso como referência e distância Haversine                    |
+| Pasta                       | Responsabilidade                                                                                    |
+| --------------------------- | --------------------------------------------------------------------------------------------------- |
+| `src/modules/*`             | Um domínio por pasta: `*.routes.ts`, `*.controller.ts`, `*.service.ts`, `*.repository.ts`           |
+| `src/algorithms/`           | Atribuição ótima: Húngaro O(n²·m), guloso como referência e distância Haversine                     |
 | `src/modules/orders/domain` | Transições válidas de status (`pending → preparing → ready → delivering → delivered`, cancelamento) |
-| `src/models/`              | Tabelas do Drizzle                                                                                |
-| `src/db/`                  | Pool, migrations e seeds                                                                          |
-| `src/middlewares/`         | Autenticação, autorização e tratamento de erros                                                   |
-| `src/config/`              | Variáveis de ambiente validadas com Zod na subida                                                 |
+| `src/models/`               | Tabelas do Drizzle                                                                                  |
+| `src/db/`                   | Pool, migrations e seeds                                                                            |
+| `src/middlewares/`          | Autenticação, autorização e tratamento de erros                                                     |
+| `src/config/`               | Variáveis de ambiente validadas com Zod na subida                                                   |
 
 ### O algoritmo de despacho
 
@@ -267,7 +269,7 @@ O "Cenário de demonstração" do despacho precisa de `DEMO_MODE=true` no `.env`
 <details>
 <summary>Passo a passo</summary>
 
-O [`render.yaml`](render.yaml) descreve a mesma arquitetura do compose: a API e o front (nginx) como dois serviços Docker, com o banco no [Neon](https://neon.tech) (PostgreSQL 18).
+A demo em https://fastmeals.onrender.com roda exatamente assim. O [`render.yaml`](render.yaml) descreve a mesma arquitetura do compose: a API e o front (nginx) como dois serviços Docker, com o banco no [Neon](https://neon.tech) (PostgreSQL 18).
 
 1. **Neon:** crie um projeto com PostgreSQL 18 e copie a connection string **direta** (host sem `-pooler`), trocando o final por `?sslmode=verify-full`. O tempo real usa `LISTEN`, que não funciona atrás do pooler.
 2. **Render:** New → Blueprint → este repositório. O Render cria os dois serviços e gera os segredos JWT.
