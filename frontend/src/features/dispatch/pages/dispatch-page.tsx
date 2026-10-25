@@ -207,7 +207,7 @@ export function DispatchPage() {
         }
       />
 
-      <div className="grid gap-4 lg:h-[calc(100svh-12rem)] lg:min-h-140 lg:grid-cols-[380px_1fr]">
+      <div className="grid grid-cols-1 gap-4 lg:h-[calc(100svh-12rem)] lg:min-h-140 lg:grid-cols-[380px_minmax(0,1fr)]">
         <aside
           aria-label="Pedidos, entregadores e sugestões"
           className="flex min-h-0 flex-col gap-5 lg:overflow-y-auto lg:pr-1"
@@ -219,7 +219,7 @@ export function DispatchPage() {
                 onOpenMatrix={suggestion.costMatrix ? () => setMatrixOpen(true) : undefined}
               />
               <section className="flex flex-col gap-2">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="text-sm font-semibold">Sugestões ({openAssignments.length})</h2>
                   <div className="flex gap-1">
                     {canWrite && undecided.length > 1 && (

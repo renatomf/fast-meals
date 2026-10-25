@@ -86,7 +86,7 @@ export function ReportsPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           label="Receita"
           loading={revenue.isLoading}
@@ -123,7 +123,7 @@ export function ReportsPage() {
         />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <ReportCard
           title="Receita por dia"
           description="Dias sem venda aparecem como zero"
@@ -142,7 +142,7 @@ export function ReportsPage() {
         </ReportCard>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <ReportCard
           title="Produtos mais vendidos"
           description={`Top ${TOP_PRODUCTS_LIMIT} em unidades`}
