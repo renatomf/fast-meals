@@ -26,7 +26,9 @@ function FitToPoints({ points }: { points: LatLngTuple[] }) {
 
   useEffect(() => {
     if (points.length === 0) return;
-    map.fitBounds(latLngBounds(points), { padding: [48, 48], maxZoom: 15 });
+    // Sem animação: sair da tela no meio de uma animação de zoom desmonta o mapa e o quadro
+    // seguinte dela lê um mapa que não existe mais (erro "_leaflet_pos" do Leaflet).
+    map.fitBounds(latLngBounds(points), { padding: [48, 48], maxZoom: 15, animate: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- a chave resume os pontos
   }, [map, key]);
 
