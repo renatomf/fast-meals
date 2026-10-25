@@ -4,6 +4,7 @@ import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
+import websocket from "@fastify/websocket";
 import Fastify, { type FastifyServerOptions } from "fastify";
 import {
   jsonSchemaTransform,
@@ -33,6 +34,8 @@ import { ordersRoutes } from "./modules/orders/orders.routes.ts";
 import { createOrdersService } from "./modules/orders/orders.service.ts";
 import { productsRepository } from "./modules/products/products.repository.ts";
 import { productsRoutes } from "./modules/products/products.routes.ts";
+import { createChangeHub, type ChangeFeed } from "./modules/realtime/change-feed.ts";
+import { realtimeRoutes } from "./modules/realtime/realtime.routes.ts";
 import { reportsRepository } from "./modules/reports/reports.repository.ts";
 import { reportsRoutes } from "./modules/reports/reports.routes.ts";
 import { createReportsService } from "./modules/reports/reports.service.ts";
@@ -45,6 +48,9 @@ export type AppDependencies = {
   env: Env;
   db: Database;
   checkDatabase: () => Promise<boolean>;
+  // Avisos de mudança do banco (LISTEN/NOTIFY). Sem ele, o WebSocket aceita conexões mas
+  // nunca recebe nada: é o caso dos testes que não tratam de tempo real.
+  changeFeed?: ChangeFeed;
   // Só nos testes: recebe as linhas de log para verificar os eventos de segurança.
   logStream?: LogStream;
 };
@@ -68,7 +74,13 @@ function loggerOptions(env: Env, logStream?: LogStream): FastifyServerOptions["l
 
 // Composition root: todas as dependências entram por aqui, o que permite
 // montar a aplicação nos testes com fakes no lugar do banco.
-export async function buildApp({ env, db, checkDatabase, logStream }: AppDependencies) {
+export async function buildApp({
+  env,
+  db,
+  checkDatabase,
+  changeFeed = createChangeHub(),
+  logStream,
+}: AppDependencies) {
   const app = Fastify({
     logger: loggerOptions(env, logStream),
     requestIdHeader: "x-request-id",
@@ -142,6 +154,14 @@ export async function buildApp({ env, db, checkDatabase, logStream }: AppDepende
   const ordersService = createOrdersService({ db, repository: ordersRepository });
   const dispatchService = createDispatchService({ db, repository: dispatchRepository });
   const reportsService = createReportsService({ db, repository: reportsRepository });
+
+  // Mensagens do cliente são só de autenticação: 4 KB sobram.
+  await app.register(websocket, { options: { maxPayload: 4_096 } });
+  await app.register(realtimeRoutes, {
+    changeFeed,
+    verifyAccessToken: authService.verifyAccessToken,
+    allowedOrigin: env.CORS_ORIGIN,
+  });
 
   await app.register(healthRoutes, { prefix: "/api", checkDatabase });
   await app.register(authRoutes, { prefix: "/api/auth", authService, authenticate });

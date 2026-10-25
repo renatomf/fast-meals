@@ -8,4 +8,5 @@ export * from "./health.ts";
 export * from "./orders.ts";
 export * from "./pagination.ts";
 export * from "./products.ts";
+export * from "./realtime.ts";
 export * from "./reports.ts";
