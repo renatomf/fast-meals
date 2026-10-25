@@ -99,6 +99,7 @@ npm run typecheck
 npm test             # o backend precisa do PostgreSQL: docker compose up -d db
 npm run build
 npm run test:e2e     # Playwright contra o Docker: docker compose up --build antes
+npm run test:mutation --workspace backend   # Stryker no algoritmo e na máquina de estados
 ```
 
 Na primeira vez, o E2E precisa do navegador: `npx playwright install chromium` dentro de `e2e/`.
