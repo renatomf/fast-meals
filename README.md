@@ -76,6 +76,13 @@ npm run test:e2e     # Playwright contra o Docker: docker compose up --build ant
 
 Na primeira vez, o E2E precisa do navegador: `npx playwright install chromium` dentro de `e2e/`.
 
+O E2E faz mais de 100 requisições por minuto, o limite geral por IP da API. Para rodá-lo, suba o ambiente com um limite maior (os limites de login não mudam):
+
+```bash
+RATE_LIMIT_MAX=1000 docker compose up --build -d          # bash
+$env:RATE_LIMIT_MAX=1000; docker compose up --build -d     # PowerShell
+```
+
 O CI roda tudo isso, verifica que não há JavaScript no repositório, audita dependências e imagens Docker e sobe a stack completa com o mesmo comando acima para rodar o E2E.
 
 ## Documentação

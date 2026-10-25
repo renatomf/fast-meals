@@ -29,6 +29,9 @@ services:
       DATABASE_URL: postgresql://fastmeals:fastmeals123@db:5432/fastmeals
       CORS_ORIGIN: http://localhost:3000
       LOG_LEVEL: info
+      # Limite geral por IP. A suíte E2E faz mais de 100 requisições por minuto de um IP só
+      # e sobe o ambiente com RATE_LIMIT_MAX=1000; os limites de login não mudam.
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
       # Segredos de desenvolvimento, como a senha do banco acima. Em produção vêm de um
       # cofre de segredos, nunca do repositório. Ficam fixos aqui de propósito: interpolar
       # ${JWT_SECRET} puxaria o .env da raiz, e os valores de exemplo dele derrubam a API

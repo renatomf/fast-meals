@@ -109,4 +109,13 @@ test.describe("viewer", () => {
     await expect(details.getByRole("button", { name: "Iniciar preparo" })).toBeDisabled();
     await expect(details.getByRole("button", { name: "Cancelar pedido" })).toBeDisabled();
   });
+
+  test("sees the dispatch board but cannot optimize or create scenarios", async () => {
+    await page.keyboard.press("Escape");
+    await page.getByRole("link", { name: "Despacho" }).click();
+    await expect(page.getByRole("heading", { name: "Despacho" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Sugerir Atribuição Otimizada" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Cenário de demonstração" })).toBeDisabled();
+    await expect(page.getByRole("region", { name: "Mapa de despacho" })).toBeVisible();
+  });
 });
