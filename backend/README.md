@@ -42,6 +42,7 @@ npm run dev        # http://localhost:3001, reinicia ao salvar
 npm start          # sem watch
 npm test           # precisa do PostgreSQL (veja "Testes")
 npm run typecheck
+npm run simulate   # com a API no ar: cria pedidos e avança a cozinha pela API, para ver o tempo real
 ```
 
 ### Banco de dados
@@ -72,30 +73,31 @@ Para outro servidor, aponte `TEST_DATABASE_URL` para ele.
 
 ## Endpoints disponíveis
 
-| Rota                                             | Descrição                                                                              |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| `POST /api/auth/login`                           | Email e senha → access token, refresh token e usuário                                  |
-| `POST /api/auth/refresh`                         | Refresh token (corpo ou cookie) → novo par de tokens; o token usado é revogado         |
-| `POST /api/auth/logout`                          | Revoga a sessão e limpa o cookie                                                       |
-| `GET /api/auth/me`                               | Usuário dono do access token                                                           |
-| `GET /api/products`                              | Lista com paginação, busca por nome, filtros e ordenação                               |
-| `GET`, `PUT`, `DELETE /api/products/:id`         | Detalhe, edição parcial e exclusão (409 se estiver em pedido aberto)                   |
-| `POST /api/products`                             | Cria produto                                                                           |
-| `GET /api/orders`                                | Lista com paginação, filtros de status e período e ordenação                           |
-| `GET /api/orders/:id`, `/:id/history`            | Detalhe e linha do tempo de status                                                     |
-| `POST /api/orders`                               | Cria pedido; total calculado no servidor                                               |
-| `PATCH /api/orders/:id/status`                   | Muda o status pelas 7 transições permitidas                                            |
-| `PATCH /api/orders/:id/assign`                   | Atribui entregador a um pedido `ready`                                                 |
-| `GET`, `POST /api/delivery-persons`              | Lista (filtros `isActive` e `available`) e cadastro                                    |
-| `GET`, `PUT`, `DELETE /api/delivery-persons/:id` | Detalhe, edição parcial e remoção (409 se estiver em pedido em andamento)              |
-| `POST /api/orders/optimize-assignment`           | Sugere a atribuição de entregadores que minimiza a distância total (algoritmo Húngaro) |
-| `POST /api/dispatch/demo-scenario`               | Cria um cenário em que o guloso perde (só com `DEMO_MODE=true`)                        |
-| `GET /api/reports/revenue`                       | Receita dos pedidos entregues por dia (período obrigatório)                            |
-| `GET /api/reports/orders-by-status`              | Pedidos em cada status                                                                 |
-| `GET /api/reports/top-products`                  | Produtos mais vendidos                                                                 |
-| `GET /api/reports/average-delivery-time`         | Tempo médio de entrega, geral e por veículo                                            |
-| `GET /api/health`                                | Status da API e do banco (200 ou 503)                                                  |
-| `GET /api/docs`                                  | Swagger UI, gerado a partir dos schemas Zod                                            |
+| Rota                                             | Descrição                                                                                                                                   |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/auth/login`                           | Email e senha → access token, refresh token e usuário                                                                                       |
+| `POST /api/auth/refresh`                         | Refresh token (corpo ou cookie) → novo par de tokens; o token usado é revogado                                                              |
+| `POST /api/auth/logout`                          | Revoga a sessão e limpa o cookie                                                                                                            |
+| `GET /api/auth/me`                               | Usuário dono do access token                                                                                                                |
+| `GET /api/products`                              | Lista com paginação, busca por nome, filtros e ordenação                                                                                    |
+| `GET`, `PUT`, `DELETE /api/products/:id`         | Detalhe, edição parcial e exclusão (409 se estiver em pedido aberto)                                                                        |
+| `POST /api/products`                             | Cria produto                                                                                                                                |
+| `GET /api/orders`                                | Lista com paginação, filtros de status e período e ordenação                                                                                |
+| `GET /api/orders/:id`, `/:id/history`            | Detalhe e linha do tempo de status                                                                                                          |
+| `POST /api/orders`                               | Cria pedido; total calculado no servidor                                                                                                    |
+| `PATCH /api/orders/:id/status`                   | Muda o status pelas 7 transições permitidas                                                                                                 |
+| `PATCH /api/orders/:id/assign`                   | Atribui entregador a um pedido `ready`                                                                                                      |
+| `GET`, `POST /api/delivery-persons`              | Lista (filtros `isActive` e `available`) e cadastro                                                                                         |
+| `GET`, `PUT`, `DELETE /api/delivery-persons/:id` | Detalhe, edição parcial e remoção (409 se estiver em pedido em andamento)                                                                   |
+| `POST /api/orders/optimize-assignment`           | Sugere a atribuição de entregadores que minimiza a distância total (algoritmo Húngaro)                                                      |
+| `POST /api/dispatch/demo-scenario`               | Cria um cenário em que o guloso perde (só com `DEMO_MODE=true`)                                                                             |
+| `GET /api/reports/revenue`                       | Receita dos pedidos entregues por dia (período obrigatório)                                                                                 |
+| `GET /api/reports/orders-by-status`              | Pedidos em cada status                                                                                                                      |
+| `GET /api/reports/top-products`                  | Produtos mais vendidos                                                                                                                      |
+| `GET /api/reports/average-delivery-time`         | Tempo médio de entrega, geral e por veículo                                                                                                 |
+| `GET /api/health`                                | Status da API e do banco (200 ou 503)                                                                                                       |
+| `GET /api/docs`                                  | Swagger UI, gerado a partir dos schemas Zod                                                                                                 |
+| `GET /ws` (WebSocket)                            | Avisos de mudança em pedidos, produtos e entregadores; o token vai na primeira mensagem ([ADR 0005](../docs/adr/0005-real-time-updates.md)) |
 
 Dez senhas erradas para o mesmo email em 15 minutos bloqueiam aquele email até o fim da janela, mesmo vindo de IPs diferentes ([ADR 0004](../docs/adr/0004-token-storage-and-rotation.md)). Reiniciar a API zera o contador.
 
@@ -104,6 +106,10 @@ Todas as rotas fora de `/api/auth`, `/api/health` e `/api/docs` exigem o header 
 Credenciais do seed: `admin@fastmeals.com` / `Admin@123` e `viewer@fastmeals.com` / `Viewer@123`.
 
 O refresh token vem no corpo, como no `api-spec`, e também num cookie `httpOnly` restrito a `/api/auth`. O front usa só o cookie. O motivo e a defesa contra CSRF estão no [ADR 0004](../docs/adr/0004-token-storage-and-rotation.md).
+
+## Tempo real e cache
+
+Um trigger no PostgreSQL publica cada mudança confirmada em pedidos, produtos e entregadores (`NOTIFY`). A API escuta numa conexão dedicada e repassa pelo WebSocket `/ws`; o mesmo aviso limpa o cache em memória dos relatórios. Detalhes, alternativas e limites no [ADR 0005](../docs/adr/0005-real-time-updates.md).
 
 ## Organização
 

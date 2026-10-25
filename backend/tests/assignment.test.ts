@@ -165,7 +165,21 @@ describe("hungarian: properties", () => {
     expect(hungarian(allEqual).rowToColumn).toEqual(hungarian(allEqual).rowToColumn);
   });
 
-  it("solves 500×500 in well under the 2 s budget", () => {
+  // Determinismo não basta: o código promete que, num empate, fica a coluna de menor
+  // índice. Sem isto, trocar o "<" por "<=" passaria despercebido (achado pelo Stryker).
+  it("breaks ties toward the lower column", () => {
+    expect(hungarian([[1, 1]]).rowToColumn).toEqual([0]);
+    expect(
+      hungarian([
+        [3, 3, 3],
+        [3, 3, 3],
+      ]).rowToColumn,
+    ).toEqual([0, 1]);
+  });
+
+  // Mede tempo, não correção: sob a instrumentação do Stryker o código fica dezenas de
+  // vezes mais lento, então este teste fica de fora das rodadas de mutação.
+  it.skipIf(process.env.MUTATION_RUN)("solves 500×500 in well under the 2 s budget", () => {
     const random = fc.sample(fc.integer({ min: 1, max: 10_000 }), { numRuns: 500 * 500, seed: 42 });
     const cost = Array.from({ length: 500 }, (_, row) => random.slice(row * 500, row * 500 + 500));
 
@@ -226,6 +240,12 @@ describe("invalid cost matrices", () => {
   ])("rejects %s in both algorithms", (_label, cost) => {
     expect(() => hungarian(cost)).toThrow(RangeError);
     expect(() => greedy(cost)).toThrow(RangeError);
+  });
+
+  // A mensagem diz onde está o problema: quem chamou não precisa caçar a célula ruim.
+  it("points at the offending row or cell", () => {
+    expect(() => hungarian([[1, 2, 3], [4]])).toThrow("row 1 has 1 columns; expected 3");
+    expect(() => greedy([[1, Number.NaN]])).toThrow("non-finite value at [0][1]");
   });
 
   it("still accepts orders with nobody to take them", () => {

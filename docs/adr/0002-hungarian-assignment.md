@@ -36,6 +36,7 @@ Escrevi os testes antes da implementação, e o histórico de commits mostra ess
 - **Propriedades:** o Húngaro nunca perde do guloso; cada entregador recebe no máximo um pedido; o número de atribuições é sempre min(n, m); a mesma entrada dá a mesma saída.
 - **Contraexemplo do guloso:** na matriz `[[1, 2], [2, 100]]`, o guloso pega o 1 e fica preso ao 100 (101), enquanto o ótimo cruza (4).
 - **Sabotagem:** trocar o sinal dos potenciais, pular a atualização de `minReduced`, não refazer o caminho aumentante ou não inverter a transposta derruba os testes.
+- **Testes de mutação (Stryker):** 91% das 201 mutações do algoritmo e da máquina de estados são pegas pelos testes; Haversine e máquina de estados, 100%. A primeira rodada achou duas lacunas reais, já cobertas: o desempate pela coluna de menor índice (o teste só conferia determinismo, não qual coluna ficava) e as mensagens de erro da validação. As 15 que sobrevivem são equivalentes, conferidas uma a uma: guardas que a validação de entrada torna inalcançáveis, atalhos de desempenho (retorno antecipado, `break` do guloso), um valor inicial sempre sobrescrito, a transposta usada também em matriz quadrada e o desempate do guloso, que a ordenação estável do JavaScript já garante. Para rodar: `npm run test:mutation --workspace backend` (relatório em `backend/reports/mutation/`).
 
 Os números de desempenho estão em [`docs/benchmarks.md`](../benchmarks.md): menos de 0,3 ms para 50 × 30; 29 ms para 500 × 500 com pontos espalhados e 252 ms no pior caso, com pontos em fila.
 

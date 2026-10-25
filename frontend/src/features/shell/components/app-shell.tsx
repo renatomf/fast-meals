@@ -1,4 +1,4 @@
-import { Outlet } from "@tanstack/react-router";
+import { Outlet, useRouterState } from "@tanstack/react-router";
 import { LogOut, Menu, PanelLeftClose, PanelLeftOpen, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
@@ -24,6 +24,7 @@ export function AppShell() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const { collapsed, toggle } = useSidebarCollapsed();
   const realtime = useRealtime(user !== null);
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   // Ctrl+K no Windows e no Linux, ⌘K no Mac, de qualquer lugar do painel. No celular, sem
   // teclado físico, a busca abre pelo botão do cabeçalho.
@@ -132,7 +133,14 @@ export function AppShell() {
         </header>
 
         <main className="mx-auto w-full max-w-7xl min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          <Outlet />
+          {/* A chave é só o caminho: trocar de tela anima a entrada; mudar filtro ou página
+              (search params) não remonta nada. */}
+          <div
+            key={pathname}
+            className="animate-in [animation-fill-mode:both] fade-in-0 slide-in-from-bottom-1 duration-200"
+          >
+            <Outlet />
+          </div>
         </main>
       </div>
 

@@ -9,3 +9,4 @@ seed/data.json
 backend/drizzle
 test-results
 playwright-report
+backend/reports

@@ -41,6 +41,7 @@
   "overrides": {
     "@esbuild-kit/core-utils": {
       "esbuild": "0.28.2"
-    }
+    },
+    "qs": "6.16.0"
   }
 }

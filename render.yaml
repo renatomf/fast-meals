@@ -1,0 +1,57 @@
+# Blueprint do Render: a mesma arquitetura do docker compose, com o banco no Neon.
+# No painel do Render: New → Blueprint → este repositório. Os valores marcados com
+# "sync: false" não ficam no repositório e são preenchidos no painel (veja o README).
+services:
+  - type: web
+    name: fastmeals-api
+    runtime: docker
+    plan: free
+    # Mesma região do banco no Neon (aws-us-east-2, Ohio): a API faz várias consultas por
+    # requisição, e a latência entre as duas soma em cada uma.
+    region: ohio
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Conexão DIRETA do Neon (host sem "-pooler"), com sslmode=verify-full: o tempo real
+      # usa LISTEN, que não funciona atrás do pooler em modo transação.
+      - key: DATABASE_URL
+        sync: false
+      # Gerados pelo Render no primeiro deploy; nunca passam pelo repositório.
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      # URL pública do front (ex.: https://fastmeals.onrender.com). O WebSocket confere a
+      # origem contra ela.
+      - key: CORS_ORIGIN
+        sync: false
+      # Só o proxy do Render é confiável: ninguém forja o X-Forwarded-For para escapar do
+      # rate limit. O preço é que quem chega pelo front aparece com o IP do nginx e todos
+      # dividem o mesmo limite; por isso o limite geral é maior que o padrão de 100.
+      - key: TRUST_PROXY_HOPS
+        value: "1"
+      - key: RATE_LIMIT_MAX
+        value: "600"
+      - key: DEMO_MODE
+        value: "true"
+      - key: LOG_LEVEL
+        value: info
+
+  - type: web
+    name: fastmeals
+    runtime: docker
+    plan: free
+    region: ohio
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: "3000"
+      # URL pública da API (ex.: https://fastmeals-api.onrender.com). O nginx encaminha /api
+      # e /ws para ela, e o navegador fala só com a origem do front.
+      - key: API_UPSTREAM
+        sync: false

@@ -17,6 +17,9 @@ FROM nginx:1.30.6-alpine AS runtime
 # libxml2) não são carregados e só aumentam a superfície de ataque.
 RUN apk upgrade --no-cache \
   && apk del --no-cache curl nginx-module-xslt nginx-module-njs libxslt libxml2
-COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+# Template: o entrypoint da imagem oficial troca ${API_UPSTREAM} pelo valor do ambiente ao subir.
+# O padrão serve o docker compose; num deploy, a variável aponta para a URL da API.
+ENV API_UPSTREAM=http://backend:3001
+COPY frontend/nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /app/frontend/dist /usr/share/nginx/html
 EXPOSE 3000

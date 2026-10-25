@@ -35,7 +35,9 @@ export function MetricCard({
         </>
       ) : (
         <>
-          <span className="text-2xl font-bold tracking-tight tabular-nums">{value}</span>
+          <span className="animate-in text-2xl font-bold tracking-tight tabular-nums fade-in-0 duration-300">
+            {value}
+          </span>
           {hint && <span className={cn("text-xs font-semibold", tones[tone])}>{hint}</span>}
         </>
       )}
