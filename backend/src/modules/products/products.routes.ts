@@ -58,7 +58,7 @@ export const productsRoutes: FastifyPluginAsyncZod<ProductsRoutesOptions> = asyn
   app.post(
     "/products",
     {
-      preHandler: adminOnly,
+      preValidation: adminOnly,
       schema: {
         tags: ["products"],
         summary: "Cria um produto (admin)",
@@ -73,7 +73,7 @@ export const productsRoutes: FastifyPluginAsyncZod<ProductsRoutesOptions> = asyn
   app.put(
     "/products/:id",
     {
-      preHandler: adminOnly,
+      preValidation: adminOnly,
       schema: {
         tags: ["products"],
         summary: "Atualiza um produto (admin); só os campos enviados mudam",
@@ -89,7 +89,7 @@ export const productsRoutes: FastifyPluginAsyncZod<ProductsRoutesOptions> = asyn
   app.delete(
     "/products/:id",
     {
-      preHandler: adminOnly,
+      preValidation: adminOnly,
       schema: {
         tags: ["products"],
         summary: "Exclui um produto (admin)",

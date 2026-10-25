@@ -210,6 +210,25 @@ describe("POST /api/products", () => {
     expect(response.statusCode).toBe(403);
     expect(response.json().error.code).toBe("FORBIDDEN");
   });
+
+  // O perfil é conferido antes de validar o corpo: o viewer recebe 403, e não as regras
+  // de validação de uma rota que ele não pode usar.
+  it("forbids the viewer before looking at the body", async () => {
+    const response = await viewer.post("/products", {});
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json().error.code).toBe("FORBIDDEN");
+  });
+
+  it("names missing fields in Portuguese", async () => {
+    const response = await admin.post("/products", { name: "Suco de Uva" });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json().error.details).toContainEqual({
+      field: "description",
+      message: "Campo obrigatório",
+    });
+  });
 });
 
 describe("PUT /api/products/:id", () => {

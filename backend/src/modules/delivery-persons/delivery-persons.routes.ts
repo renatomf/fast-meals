@@ -59,7 +59,7 @@ export const deliveryPersonsRoutes: FastifyPluginAsyncZod<DeliveryPersonsRoutesO
   app.post(
     "/delivery-persons",
     {
-      preHandler: adminOnly,
+      preValidation: adminOnly,
       schema: {
         tags: ["delivery-persons"],
         summary: "Cadastra um entregador (admin)",
@@ -74,7 +74,7 @@ export const deliveryPersonsRoutes: FastifyPluginAsyncZod<DeliveryPersonsRoutesO
   app.put(
     "/delivery-persons/:id",
     {
-      preHandler: adminOnly,
+      preValidation: adminOnly,
       schema: {
         tags: ["delivery-persons"],
         summary: "Atualiza um entregador (admin); só os campos enviados mudam",
@@ -90,7 +90,7 @@ export const deliveryPersonsRoutes: FastifyPluginAsyncZod<DeliveryPersonsRoutesO
   app.delete(
     "/delivery-persons/:id",
     {
-      preHandler: adminOnly,
+      preValidation: adminOnly,
       schema: {
         tags: ["delivery-persons"],
         summary: "Remove um entregador (admin)",

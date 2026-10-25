@@ -74,7 +74,7 @@ export const ordersRoutes: FastifyPluginAsyncZod<OrdersRoutesOptions> = async (
   app.post(
     "/orders",
     {
-      preHandler: adminOnly,
+      preValidation: adminOnly,
       schema: {
         tags: ["orders"],
         summary: "Cria um pedido (admin)",
@@ -92,7 +92,7 @@ export const ordersRoutes: FastifyPluginAsyncZod<OrdersRoutesOptions> = async (
   app.patch(
     "/orders/:id/status",
     {
-      preHandler: adminOnly,
+      preValidation: adminOnly,
       schema: {
         tags: ["orders"],
         summary: "Altera o status de um pedido (admin)",
@@ -117,7 +117,7 @@ export const ordersRoutes: FastifyPluginAsyncZod<OrdersRoutesOptions> = async (
   app.patch(
     "/orders/:id/assign",
     {
-      preHandler: adminOnly,
+      preValidation: adminOnly,
       schema: {
         tags: ["orders"],
         summary: "Atribui um entregador a um pedido pronto (admin)",

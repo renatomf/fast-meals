@@ -1,3 +1,6 @@
+// Primeiro: configura as mensagens do Zod antes de qualquer schema ser usado.
+import "./zod-config.ts";
+
 export * from "./auth.ts";
 export * from "./common.ts";
 export * from "./delivery-persons.ts";
