@@ -1,0 +1,42 @@
+name: Demo refresh
+
+# A demo online fica no ar por dias; sem isto, os gráficos ganhariam um dia vazio no fim a
+# cada dia. Traz o histórico de pedidos do banco da demo (Neon) para perto de hoje.
+on:
+  schedule:
+    # 06:00 UTC = 03:00 em São Paulo, fora do horário de uso.
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: demo-refresh
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    name: Move the demo history to today
+    runs-on: ubuntu-24.04
+    # Sem o segredo (num fork, por exemplo) o job não roda, em vez de falhar.
+    if: ${{ github.repository == 'renatomf/fast-meals' }}
+    steps:
+      # Actions fixadas por SHA: uma tag pode ser movida, um commit não.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --workspace backend --include-workspace-root
+      - name: Refresh
+        env:
+          DATABASE_URL: ${{ secrets.DEMO_DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Secret DEMO_DATABASE_URL is not set"
+            exit 1
+          fi
+          npm run demo:refresh --workspace backend

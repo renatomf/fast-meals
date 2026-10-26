@@ -186,6 +186,7 @@ Render para a API e o front, Neon para o PostgreSQL ([`render.yaml`](render.yaml
 - **Mesma região (Ohio) para a API e o banco.** Cada requisição faz várias consultas, e a latência entre os dois soma em cada uma.
 - **Só o proxy do Render é confiável** (`TRUST_PROXY_HOPS=1`). Confiar em mais saltos deixaria quem chama a API direto forjar o `X-Forwarded-For` e escapar do rate limit. O custo é que quem chega pelo front aparece com o IP do nginx e todos dividem o mesmo limite geral, por isso ele sobe para 600 por minuto. O bloqueio de login por email não depende do IP e continua igual.
 - **Segredos fora do repositório.** Os JWT são gerados pelo Render; a connection string e as URLs são preenchidas no painel.
+- **Demo que não envelhece.** Os pedidos do seed têm as datas do dia em que ele rodou; com a demo no ar por dias, os gráficos ganhariam um dia vazio no fim a cada dia. Um workflow diário (`demo:refresh`) desloca o histórico em dias inteiros, sem mudar o horário de cada pedido. A referência é o último dia com volume normal, e não o pedido mais recente: um pedido avulso entregue por quem testa a demo não segura o resto. Nenhum pedido vai para o futuro, e os gatilhos de `updated_at` e de aviso ficam desligados só dentro da transação, com um aviso único no fim.
 - **Validado antes do Render:** migrations, seed (duas vezes, a segunda sem efeito), `seed:load` e um `LISTEN/NOTIFY` de ponta a ponta rodaram contra o Neon.
 
 ## Dificuldades encontradas

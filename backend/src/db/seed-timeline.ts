@@ -72,12 +72,16 @@ function stepMinutes(random: Random, toStatus: OrderStatus, input: TimelineInput
   }
 }
 
-// Horário de almoço ou jantar em São Paulo, `daysAgo` dias atrás. Com daysAgo >= 2 o
-// pedido inteiro (até ~2 h de duração) fica sempre no passado.
+// Folga para a duração de um pedido inteiro (até ~2 h, da criação à entrega).
+const LONGEST_ORDER_MS = 3 * 60 * MINUTE_MS;
+
+// Horário de almoço ou jantar em São Paulo, `daysAgo` dias atrás. Com daysAgo = 1, o jantar
+// de ontem ainda estaria em andamento logo depois da meia-noite: aí o pedido recua um dia,
+// para que o pedido inteiro fique sempre no passado.
 export function mealTimeDaysAgo(random: Random, now: Date, daysAgo: number): Date {
   const day = new Date(now.getTime() - daysAgo * DAY_MS);
   const localHour = random.next() < 0.45 ? random.int(11, 14) : random.int(18, 22);
-  return new Date(
+  const createdAt = new Date(
     Date.UTC(
       day.getUTCFullYear(),
       day.getUTCMonth(),
@@ -86,6 +90,9 @@ export function mealTimeDaysAgo(random: Random, now: Date, daysAgo: number): Dat
       random.int(0, 59),
     ),
   );
+  return createdAt.getTime() + LONGEST_ORDER_MS > now.getTime()
+    ? new Date(createdAt.getTime() - DAY_MS)
+    : createdAt;
 }
 
 export function addMinutes(date: Date, minutes: number): Date {
