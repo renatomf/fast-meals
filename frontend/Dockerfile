@@ -12,7 +12,7 @@ COPY packages/contracts packages/contracts
 COPY frontend frontend
 RUN npm run build --workspace @fastmeals/frontend
 
-FROM nginx:1.30.6-alpine AS runtime
+FROM nginx:1.31.7-alpine AS runtime
 # Só servimos arquivos estáticos e fazemos proxy: curl e os módulos xslt/njs (que puxam
 # libxml2) não são carregados e só aumentam a superfície de ataque.
 RUN apk upgrade --no-cache \
