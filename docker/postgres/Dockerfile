@@ -1,4 +1,4 @@
-FROM postgres:18.6-alpine AS hardened
+FROM postgres:18.7-alpine AS hardened
 
 # Três remoções, todas verificadas por scan de imagem (ver DECISIONS.md, "Segurança"):
 #
